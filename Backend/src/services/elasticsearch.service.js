@@ -3,6 +3,7 @@ const {
 	isElasticsearchEnabled,
 	NOVEL_INDEX
 } = require('../config/elasticsearch');
+const { NOVEL_STATUS } = require('../utils/constants');
 const logger = require('../utils/logger');
 
 class ElasticsearchService {
@@ -177,6 +178,7 @@ class ElasticsearchService {
 						must: [],
 						should: [],
 						filter: [],
+						must_not: [{ term: { status: NOVEL_STATUS.DELETED } }],
 						minimum_should_match: 0
 					}
 				}

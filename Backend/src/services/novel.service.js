@@ -9,7 +9,9 @@ const {
 } = require('../utils/errors');
 const {
 	ERROR_MESSAGES,
-	UPLOAD_LIMITS
+	UPLOAD_LIMITS,
+	NOVEL_STATUS,
+	ROLES
 } = require('../utils/constants');
 const logger = require('../utils/logger');
 
@@ -109,7 +111,11 @@ const NovelService = {
 		const query = {};
 		const sort = {};
 
-		if (filters.status) query.status = filters.status;
+		if (filters.status) {
+			query.status = filters.status;
+		} else {
+			query.status = { $ne: NOVEL_STATUS.DELETED };
+		}
 		if (filters.genres) {
 			query.genres = {
 				$in: Array.isArray(filters.genres) ? filters.genres : [filters.genres]
@@ -176,7 +182,7 @@ const NovelService = {
 		};
 	},
 
-	async getNovelById(id, includeChapters = false) {
+	async getNovelById(id, includeChapters = false, requestingUser = null) {
 		const query = Novel.findById(id).populate('author', 'username');
 
 		if (includeChapters) {
@@ -193,6 +199,16 @@ const NovelService = {
 
 		const novel = await query.exec();
 		if (!novel) throw new NotFoundError(ERROR_MESSAGES.NOVEL_NOT_FOUND);
+
+		if (novel.status === NOVEL_STATUS.DELETED) {
+			const isAuthor = requestingUser && novel.author._id.toString() === requestingUser.id;
+			const isAdmin = requestingUser && requestingUser.role === ROLES.ADMIN;
+
+			if (!isAuthor && !isAdmin) {
+				throw new NotFoundError(ERROR_MESSAGES.NOVEL_NOT_FOUND);
+			}
+		}
+
 		return novel;
 	},
 
@@ -324,6 +340,8 @@ const NovelService = {
 
 		if (query.status) {
 			filter.status = query.status;
+		} else {
+			filter.status = { $ne: NOVEL_STATUS.DELETED };
 		}
 
 		const [novels, totalCount] = await Promise.all([

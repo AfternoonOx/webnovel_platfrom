@@ -575,7 +575,7 @@ const HomePage = () => {
             ) : (
               <>
 
-                {/* Popular Genres - New Section */}
+                {/* Popular Genres */}
                 <div
                   ref={el => sectionsRef.current[1] = el}
                   className="mb-16 opacity-0"

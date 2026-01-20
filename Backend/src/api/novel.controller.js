@@ -17,7 +17,8 @@ const {
 	isNovelAuthor
 } = require('../middleware/ownership.middleware');
 const {
-	authJWT
+	authJWT,
+	optionalAuthJWT
 } = require('../middleware/authJWT');
 const { handleUpload } = require('../middleware/upload.middleware');
 const { handleEpubUpload } = require('../middleware/epub.upload.middleware');
@@ -38,8 +39,8 @@ router.post('/',
 	async (req, res, next) => {
 		try {
 			const novel = await NovelService.createNovel(
-				req.body, 
-				req.user.id, 
+				req.body,
+				req.user.id,
 				req.file
 			);
 			res.status(HTTP_STATUS.CREATED).json({
@@ -55,45 +56,44 @@ router.post('/',
 // Get all novels with search and filters
 // No authentication required as this is a public endpoint
 router.get('/',
-    validateSearch, 
-    handleValidationErrors,
-    async (req, res, next) => {
-        try {
-            const novels = await NovelService.getNovels(req.query);
-            res.status(HTTP_STATUS.OK).json({
-                status: API_STATUS.SUCCESS,
-                data: novels
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
+	validateSearch,
+	handleValidationErrors,
+	async (req, res, next) => {
+		try {
+			const novels = await NovelService.getNovels(req.query);
+			res.status(HTTP_STATUS.OK).json({
+				status: API_STATUS.SUCCESS,
+				data: novels
+			});
+		} catch (error) {
+			next(error);
+		}
+	}
 );
 
 // Get the authenticated user's novels
 // Separate from the author/:authorId endpoint for better access control
 router.get('/me',
-    authJWT,
-    validatePagination,
-    handleValidationErrors,
-    async (req, res, next) => {
-        try {
-            const result = await NovelService.getMyNovels(req.user.id, req.query);
-            
-            res.status(HTTP_STATUS.OK).json({
-                status: API_STATUS.SUCCESS,
-                data: result
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
+	authJWT,
+	validatePagination,
+	handleValidationErrors,
+	async (req, res, next) => {
+		try {
+			const result = await NovelService.getMyNovels(req.user.id, req.query);
+
+			res.status(HTTP_STATUS.OK).json({
+				status: API_STATUS.SUCCESS,
+				data: result
+			});
+		} catch (error) {
+			next(error);
+		}
+	}
 );
 
-// Get novel by ID
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', optionalAuthJWT, async (req, res, next) => {
 	try {
-		const novel = await NovelService.getNovelById(req.params.id);
+		const novel = await NovelService.getNovelById(req.params.id, false, req.user);
 		res.status(HTTP_STATUS.OK).json({
 			status: API_STATUS.SUCCESS,
 			data: novel
@@ -107,7 +107,7 @@ router.get('/:id', async (req, res, next) => {
 router.get('/:id/cover', async (req, res, next) => {
 	try {
 		const cover = await NovelService.getNovelCover(req.params.id);
-		
+
 		// Set the correct content type and send binary data
 		res.set('Content-Type', cover.contentType);
 		res.send(cover.data);
@@ -126,8 +126,8 @@ router.put('/:id',
 	async (req, res, next) => {
 		try {
 			const novel = await NovelService.updateNovel(
-				req.params.id, 
-				req.body, 
+				req.params.id,
+				req.body,
 				req.file
 			);
 			res.status(HTTP_STATUS.OK).json({
@@ -198,58 +198,58 @@ router.post('/:id/ratings',
 
 // Increment view count
 router.post('/:id/increment-view', async (req, res, next) => {
-    try {
-        const novel = await NovelService.incrementViewCount(req.params.id);
-        res.status(HTTP_STATUS.OK).json({
-            status: API_STATUS.SUCCESS,
-            data: novel
-        });
-    } catch (error) {
-        next(error);
-    }
+	try {
+		const novel = await NovelService.incrementViewCount(req.params.id);
+		res.status(HTTP_STATUS.OK).json({
+			status: API_STATUS.SUCCESS,
+			data: novel
+		});
+	} catch (error) {
+		next(error);
+	}
 });
 
 // Get novels by author ID
 router.get('/author/:authorId',
-    validateAuthorNovels,
-    handleValidationErrors,
-    async (req, res, next) => {
-        try {
-            const result = await NovelService.getNovelsByAuthorId(
-                req.params.authorId,
-                req.query
-            );
-            
-            res.status(HTTP_STATUS.OK).json({
-                status: API_STATUS.SUCCESS,
-                data: result
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
+	validateAuthorNovels,
+	handleValidationErrors,
+	async (req, res, next) => {
+		try {
+			const result = await NovelService.getNovelsByAuthorId(
+				req.params.authorId,
+				req.query
+			);
+
+			res.status(HTTP_STATUS.OK).json({
+				status: API_STATUS.SUCCESS,
+				data: result
+			});
+		} catch (error) {
+			next(error);
+		}
+	}
 );
 
 // Get author's analytics
 // Public endpoint providing aggregate statistics
 // Detailed analytics would be behind authentication
 router.get('/author/:authorId/analytics',
-    validateAnalyticsParams,
-    async (req, res, next) => {
-        try {
-            const analytics = await NovelService.getAuthorAnalytics(
-                req.params.authorId,
-                req.query.period
-            );
-            
-            res.status(HTTP_STATUS.OK).json({
-                status: API_STATUS.SUCCESS,
-                data: analytics
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
+	validateAnalyticsParams,
+	async (req, res, next) => {
+		try {
+			const analytics = await NovelService.getAuthorAnalytics(
+				req.params.authorId,
+				req.query.period
+			);
+
+			res.status(HTTP_STATUS.OK).json({
+				status: API_STATUS.SUCCESS,
+				data: analytics
+			});
+		} catch (error) {
+			next(error);
+		}
+	}
 );
 
 
@@ -270,7 +270,7 @@ router.post('/:id/import-chapters',
 					draft: req.body.draft === 'true',
 				}
 			);
-			
+
 			res.status(HTTP_STATUS.OK).json({
 				status: API_STATUS.SUCCESS,
 				data: importResults

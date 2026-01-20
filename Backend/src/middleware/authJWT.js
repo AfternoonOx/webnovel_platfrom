@@ -46,6 +46,33 @@ const authJWT = async (req, res, next) => {
 	}
 };
 
+const optionalAuthJWT = async (req, res, next) => {
+	const authHeader = req.headers.authorization;
+
+	if (!authHeader?.startsWith('Bearer ')) {
+		return next();
+	}
+
+	const token = authHeader.split(' ')[1];
+
+	try {
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+		if (decoded.type !== 'access') {
+			return next();
+		}
+
+		req.user = {
+			id: decoded.userId,
+			email: decoded.email,
+			role: decoded.role
+		};
+		next();
+	} catch (error) {
+		next();
+	}
+};
+
 // Role-based authorization middleware factory
 // Returns a middleware function that checks if the authenticated user has one of the allowed roles
 // This is separate from authentication to follow the single responsibility principle
@@ -58,5 +85,6 @@ const authorize = (...roles) => (req, res, next) => {
 
 module.exports = {
 	authJWT,
+	optionalAuthJWT,
 	authorize
 };
