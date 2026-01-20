@@ -168,7 +168,8 @@ class ElasticsearchService {
 			sortBy,
 			page = 1,
 			limit = 10,
-			author
+			author,
+			includeDeleted
 		} = searchParams;
 
 		try {
@@ -178,7 +179,7 @@ class ElasticsearchService {
 						must: [],
 						should: [],
 						filter: [],
-						must_not: [{ term: { status: NOVEL_STATUS.DELETED } }],
+						must_not: includeDeleted ? [] : [{ term: { status: NOVEL_STATUS.DELETED } }],
 						minimum_should_match: 0
 					}
 				}

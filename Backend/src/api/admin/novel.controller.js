@@ -22,7 +22,7 @@ router.get('/',
     handleValidationErrors,
     async (req, res, next) => {
         try {
-            const result = await NovelService.getNovels(req.query);
+            const result = await NovelService.getNovels({ ...req.query, includeDeleted: true });
             res.status(HTTP_STATUS.OK).json({
                 status: API_STATUS.SUCCESS,
                 data: result
@@ -57,7 +57,7 @@ router.get('/:id',
     handleValidationErrors,
     async (req, res, next) => {
         try {
-            const novel = await NovelService.getNovelById(req.params.id);
+            const novel = await NovelService.getNovelById(req.params.id, false, req.user);
             res.status(HTTP_STATUS.OK).json({
                 status: API_STATUS.SUCCESS,
                 data: novel
@@ -106,7 +106,7 @@ router.put('/:id',
                 novel = await NovelService.updateNovel(req.params.id, updateData);
             } else {
                 // If only isFeatured changed, return the latest novel state without re-updating.
-                novel = await NovelService.getNovelById(req.params.id);
+                novel = await NovelService.getNovelById(req.params.id, false, req.user);
             }
 
             res.status(HTTP_STATUS.OK).json({

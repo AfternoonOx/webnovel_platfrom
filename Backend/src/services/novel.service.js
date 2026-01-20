@@ -113,7 +113,7 @@ const NovelService = {
 
 		if (filters.status) {
 			query.status = filters.status;
-		} else {
+		} else if (!filters.includeDeleted) {
 			query.status = { $ne: NOVEL_STATUS.DELETED };
 		}
 		if (filters.genres) {
