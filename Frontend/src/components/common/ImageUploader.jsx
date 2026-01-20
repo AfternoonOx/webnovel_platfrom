@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { FaUpload, FaTrash, FaImage } from 'react-icons/fa';
+import { useLanguage } from '../../context/LanguageContext';
 
 const ImageUploader = ({ 
   initialImage = null, 
@@ -8,6 +9,7 @@ const ImageUploader = ({
   label = 'Cover Image', 
   className = '' 
 }) => {
+  const { t } = useLanguage();
   const [preview, setPreview] = useState(initialImage);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -24,7 +26,7 @@ const ImageUploader = ({
       };
       reader.readAsDataURL(file);
     } else {
-      alert('Please select an image file (JPG, PNG, etc.)');
+      alert(t('imageUploader.invalidFileType'));
     }
   };
   
@@ -57,7 +59,7 @@ const ImageUploader = ({
         };
         reader.readAsDataURL(file);
       } else {
-        alert('Please select an image file (JPG, PNG, etc.)');
+        alert(t('imageUploader.invalidFileType'));
       }
     }
   };
@@ -76,7 +78,7 @@ const ImageUploader = ({
     <div className={`mb-4 ${className}`}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          {label}
+          {label === 'Cover Image' ? t('imageUploader.defaultLabel') : label}
         </label>
       )}
       
@@ -96,7 +98,7 @@ const ImageUploader = ({
           <div className="relative">
             <img 
               src={preview} 
-              alt="Preview" 
+              alt={t('imageUploader.previewAlt')} 
               className="mx-auto max-h-64 rounded"
             />
             <button
@@ -114,10 +116,10 @@ const ImageUploader = ({
           <div className="py-8">
             <FaImage className="mx-auto h-12 w-12 text-gray-400" />
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Drop an image here, or <span className="text-indigo-500">browse</span>
+              {t('imageUploader.dropHere')}{' '}<span className="text-indigo-500">{t('imageUploader.browse')}</span>
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-500">
-              PNG, JPG, GIF up to 5MB
+              {t('imageUploader.helper')}
             </p>
           </div>
         )}

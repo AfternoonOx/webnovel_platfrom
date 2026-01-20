@@ -4,9 +4,11 @@ import { FaClock, FaEye, FaEdit, FaTrash } from 'react-icons/fa';
 import Button from '../common/Button';
 import ChapterService from '../../services/chapter.service';
 import { formatDate } from '../../utils/helpers';
+import { useLanguage } from '../../context/LanguageContext';
 
 const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onChapterDelete }) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -14,7 +16,7 @@ const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onCh
     event.preventDefault();
     event.stopPropagation();
 
-    if (!confirm(`Czy na pewno chcesz usunąć Rozdział ${chapterNumber}? Tej operacji nie można cofnąć.`)) {
+    if (!confirm(t('chapterList.confirmDelete', { chapterNumber }))) {
       return;
     }
 
@@ -29,10 +31,10 @@ const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onCh
           onChapterDelete(chapterNumber);
         }
       } else {
-        setError('Nie udało się usunąć rozdziału. Spróbuj ponownie.');
+        setError(t('chapterList.deleteFailed'));
       }
     } catch (err) {
-      setError('Nie udało się usunąć rozdziału. Spróbuj ponownie.');
+      setError(t('chapterList.deleteFailed'));
       console.error('Failed to delete chapter:', err);
     } finally {
       setLoading(false);
@@ -46,7 +48,7 @@ const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onCh
   };
 
   const validChapters = Array.isArray(chapters) ? chapters : [];
-  
+
   // Filter out draft chapters for non-authors
   const visibleChapters = validChapters.filter(chapter => {
     // If user is author, show all chapters
@@ -60,7 +62,7 @@ const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onCh
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
       <div className="px-5 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Rozdziały</h3>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('chapterList.title')}</h3>
       </div>
 
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -78,8 +80,7 @@ const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onCh
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-start flex-grow">
-                    {/* Chapter Number removed completely */}
-                    <div className="flex-grow"> {/* No left margin here, as chapter number is gone */}
+                    <div className="flex-grow">
                       <span className={`font-medium ${
                         currentChapter === chapter.chapterNumber
                           ? 'text-indigo-600 dark:text-indigo-400'
@@ -94,10 +95,10 @@ const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onCh
                         </div>
                         <div className="flex items-center">
                           <FaEye className="mr-1" />
-                          <span>{chapter.readCount || 0} wyświetleń</span>
+                          <span>{chapter.readCount || 0} {t('chapterList.views')}</span>
                         </div>
                         <div className="flex items-center">
-                           <span>{chapter.wordCount || 0} słów</span>
+                          <span>{chapter.wordCount || 0} {t('chapterList.words')}</span>
                         </div>
                       </div>
                     </div>
@@ -105,17 +106,17 @@ const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onCh
                   {isAuthor && (
                     <div className="flex items-center space-x-3 ml-4 flex-shrink-0">
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                      chapter.status === 'published'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                    }`}>
-                      {chapter.status === 'published' ? 'Opublikowany' : 'Szkic'}
+                        chapter.status === 'published'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                      }`}>
+                        {chapter.status === 'published' ? t('chapterList.published') : t('chapterList.draft')}
                       </span>
                       <div className="flex space-x-1">
                         <Button
                           variant="outline"
                           size="xs"
-                          title="Edytuj Rozdział"
+                          title={t('chapterList.editChapter')}
                           onClick={(e) => handleEditChapter(e, chapter.chapterNumber)}
                           disabled={loading}
                         >
@@ -124,7 +125,7 @@ const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onCh
                         <Button
                           variant="danger"
                           size="xs"
-                          title="Usuń Rozdział"
+                          title={t('chapterList.deleteChapter')}
                           onClick={(e) => handleDeleteChapter(e, chapter.chapterNumber)}
                           disabled={loading}
                         >
@@ -144,18 +145,18 @@ const ChapterList = ({ chapters, novelId, currentChapter, isAuthor = false, onCh
             ) : (
               isAuthor ? (
                 <>
-                  <p className="mb-4">Brak dostępnych rozdziałów.</p>
+                  <p className="mb-4">{t('chapterList.noChapters')}</p>
                   <Button
                     as="link"
                     to={`/novels/${novelId}/chapters/create`}
                     variant="primary"
                     size="sm"
                   >
-                    Dodaj swój pierwszy rozdział
+                    {t('chapterList.addFirstChapter')}
                   </Button>
                 </>
               ) : (
-                <p>Brak dostępnych rozdziałów.</p>
+                <p>{t('chapterList.noChapters')}</p>
               )
             )}
           </div>

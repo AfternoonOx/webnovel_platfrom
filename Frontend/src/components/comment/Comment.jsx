@@ -5,6 +5,7 @@ import { FaReply, FaEdit, FaTrash, FaSpinner } from 'react-icons/fa';
 import Button from '../common/Button';
 import CommentForm from './CommentForm';
 import CommentService from '../../services/comment.service';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Comment = ({
   comment,
@@ -18,6 +19,7 @@ const Comment = ({
   toggleEdit
 }) => {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState([]);
   const [loadingReplies, setLoadingReplies] = useState(false);
@@ -98,7 +100,7 @@ const Comment = ({
   };
 
   const handleDeleteClick = () => {
-    if (window.confirm('Czy na pewno chcesz usunąć ten komentarz?')) {
+    if (window.confirm(t('comments.confirmDelete'))) {
       onDelete(comment._id, parentId);
     }
   };
@@ -119,12 +121,12 @@ const Comment = ({
       <div className="bg-white dark:bg-gray-800">
         <div className="flex items-start mb-3">
           <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-md font-semibold mr-3 flex-shrink-0">
-            {comment.author ? comment.author.username.charAt(0).toUpperCase() : '?'}
+            {comment.author ? comment.author.username.charAt(0).toUpperCase() : t('comments.anonymousInitial')}
           </div>
           <div className="flex-1">
             <div className="flex items-center flex-wrap gap-x-2">
               <p className="font-semibold text-gray-900 dark:text-white">
-                {comment.author ? comment.author.username : 'Anonim'}
+                {comment.author ? comment.author.username : t('comments.anonymous')}
               </p>
               <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
               <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -154,7 +156,7 @@ const Comment = ({
                 onClick={() => toggleReply(comment._id)}
               >
                 <FaReply className="mr-1 text-sm" />
-                Odpowiedz
+                {t('comments.reply')}
               </button>
             )}
 
@@ -166,7 +168,7 @@ const Comment = ({
                   onClick={() => toggleEdit(comment._id)}
                 >
                   <FaEdit className="mr-1 text-sm" />
-                  Edytuj
+                  {t('comments.edit')}
                 </button>
                 <span className="text-gray-300 dark:text-gray-600 text-sm">|</span>
                 <button
@@ -174,7 +176,7 @@ const Comment = ({
                   onClick={handleDeleteClick}
                 >
                   <FaTrash className="mr-1 text-sm" />
-                  Usuń
+                  {t('comments.delete')}
                 </button>
               </>
             )}
@@ -186,7 +188,7 @@ const Comment = ({
                   className="text-xs text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center transition-colors duration-200"
                   onClick={handleToggleReplies}
                 >
-                  {showReplies ? 'Ukryj odpowiedzi' : `Pokaż odpowiedzi (${actualReplyCount})`}
+                  {showReplies ? t('comments.hideReplies') : t('comments.showReplies', { count: actualReplyCount })}
                 </button>
               </>
             )}
@@ -199,7 +201,7 @@ const Comment = ({
           <CommentForm
             onSubmit={handleReplySubmit}
             onCancel={() => toggleReply(null)}
-            placeholder="Napisz odpowiedź..."
+            placeholder={t('comments.replyPlaceholder')}
           />
         </div>
       )}
@@ -229,7 +231,7 @@ const Comment = ({
             </div>
           ) : (
             <p className="text-gray-500 dark:text-gray-400 text-sm py-2 ml-4">
-              Brak odpowiedzi.
+              {t('comments.noReplies')}
             </p>
           )}
         </div>

@@ -67,16 +67,16 @@ const Footer = () => {
         
         <div className="flex flex-col items-center md:flex-row md:justify-between">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 md:mb-0">
-            © {currentYear} Opowiadamy. {t('footer.allRightsReserved')} <FaHeart className="inline-block text-red-500 mx-1" /> {t('footer.by')}
+            &copy; {currentYear} Opowiadamy. {t('footer.allRightsReserved')} <FaHeart className="inline-block text-red-500 mx-1" /> {t('footer.by')}
           </p>
           <div className="flex space-x-6">
             <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
               <FaTwitter className="w-5 h-5" />
-              <span className="sr-only">Twitter page</span>
+              <span className="sr-only">{t('footerSrOnly.twitter')}</span>
             </a>
             <a href="https://github.com/" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
               <FaGithub className="w-5 h-5" />
-              <span className="sr-only">GitHub</span>
+              <span className="sr-only">{t('footerSrOnly.github')}</span>
             </a>
           </div>
         </div>

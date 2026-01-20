@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaBook } from 'react-icons/fa';
 import Layout from '../components/layout/Layout';
 import MobileNavigation from '../components/layout/MobileNavigation';
+import { useLanguage } from '../context/LanguageContext';
 
 const GuidelinesPage = () => {
+  const { t } = useLanguage();
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8 pb-24 md:pb-8">
@@ -17,7 +20,7 @@ const GuidelinesPage = () => {
           </Link>
           <div className="flex items-center">
             <FaBook className="text-indigo-500 mr-3" size={24} />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Wytyczne dla autorów</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('guidelinesPage.title')}</h1>
           </div>
         </div>
         

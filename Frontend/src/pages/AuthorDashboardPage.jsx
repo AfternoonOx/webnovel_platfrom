@@ -243,7 +243,7 @@ const AuthorDashboardPage = () => {
                               </div>
                               <div className="text-sm text-gray-500 dark:text-gray-400">
                                 {novel.genres?.slice(0, 2).join(', ')}
-                                {novel.genres?.length > 2 && ` +${novel.genres.length - 2} more`}
+                                {novel.genres?.length > 2 && ` +${novel.genres.length - 2} ${t('authorDashboard.more')}`}
                               </div>
                             </div>
                           </div>

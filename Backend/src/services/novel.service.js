@@ -1,6 +1,7 @@
 const Novel = require('../models/novel.model');
-const User = require('../models/user.model'); 
+const User = require('../models/user.model');
 const elasticsearchService = require('./elasticsearch.service');
+const { isElasticsearchEnabled } = require('../config/elasticsearch');
 const RecommendationService = require('./recommendation/recommendation.service');
 const {
 	NotFoundError,
@@ -14,11 +15,11 @@ const logger = require('../utils/logger');
 
 const prepareNovelForElasticsearch = (novel) => {
 	const esNovel = novel.toObject ? novel.toObject() : { ...novel };
-	
+
 	if (esNovel.cover) {
 		delete esNovel.cover;
 	}
-	
+
 	return esNovel;
 };
 
@@ -43,31 +44,31 @@ const NovelService = {
 			.lean();
 
 		const esNovel = prepareNovelForElasticsearch(populatedNovel);
-
 		await elasticsearchService.indexNovel(esNovel);
+
 		return novel.toJSON();
 	},
 
 	async getNovels(query = {}) {
-		try {
-			// If no search parameters are provided, use MongoDB
-			if (!query.search && !query.genres && !query.tags && 
-				!query.status && !query.minRating && !query.author) {
-				return this._getNovelsByMongoDB(query);
-			}
+		const hasSearchParams = query.search || query.genres || query.tags ||
+			query.status || query.minRating || query.author;
 
+		if (!isElasticsearchEnabled() || !hasSearchParams) {
+			return this._getNovelsByMongoDB(query);
+		}
+
+		try {
 			const searchResults = await elasticsearchService.searchNovels(query);
 
-			// If no results from Elasticsearch, fallback to MongoDB
-			if (!searchResults.hits.length) {
+			if (!searchResults || !searchResults.hits.length) {
 				return this._getNovelsByMongoDB(query);
 			}
 
 			const novels = await Novel.find({
-					_id: {
-						$in: searchResults.hits.map(hit => hit.id)
-					}
-				})
+				_id: {
+					$in: searchResults.hits.map(hit => hit.id)
+				}
+			})
 				.populate('author', 'username')
 				.lean();
 
@@ -126,11 +127,11 @@ const NovelService = {
 		}
 		if (filters.search) {
 			query.$or = [{
-					title: new RegExp(filters.search, 'i')
-				},
-				{
-					description: new RegExp(filters.search, 'i')
-				}
+				title: new RegExp(filters.search, 'i')
+			},
+			{
+				description: new RegExp(filters.search, 'i')
+			}
 			];
 		}
 
@@ -156,11 +157,11 @@ const NovelService = {
 
 		const [novels, total] = await Promise.all([
 			Novel.find(query)
-			.sort(sort)
-			.skip((page - 1) * limit)
-			.limit(limit)
-			.populate('author', 'username')
-			.lean(),
+				.sort(sort)
+				.skip((page - 1) * limit)
+				.limit(limit)
+				.populate('author', 'username')
+				.lean(),
 			Novel.countDocuments(query)
 		]);
 
@@ -206,26 +207,26 @@ const NovelService = {
 
 	async updateNovel(id, updateData, coverFile) {
 		const updateObj = { ...updateData };
-		
+
 		if (coverFile) {
 			updateObj.cover = {
 				data: coverFile.buffer,
 				contentType: coverFile.mimetype
 			};
 		}
-		
+
 		const novel = await Novel.findByIdAndUpdate(
 			id,
 			updateObj, {
-				new: true,
-				runValidators: true
-			}
+			new: true,
+			runValidators: true
+		}
 		).populate('author', 'username');
 
 		if (!novel) throw new NotFoundError(ERROR_MESSAGES.NOVEL_NOT_FOUND);
-		
+
 		const esNovel = prepareNovelForElasticsearch(novel);
-		
+
 		await elasticsearchService.updateNovel(id, esNovel);
 		return novel;
 	},
@@ -246,9 +247,9 @@ const NovelService = {
 		if (!novel) throw new NotFoundError(ERROR_MESSAGES.NOVEL_NOT_FOUND);
 
 		await novel.addRating(userId, rating);
-		
+
 		const esNovel = prepareNovelForElasticsearch(novel);
-		
+
 		await elasticsearchService.updateNovel(novelId, esNovel);
 
 		// Invalidate user's recommendation cache after rating a novel
@@ -278,9 +279,9 @@ const NovelService = {
 		if (!novel) throw new NotFoundError(ERROR_MESSAGES.NOVEL_NOT_FOUND);
 
 		await novel.removeRating(userId);
-		
+
 		const esNovel = prepareNovelForElasticsearch(novel);
-		
+
 		await elasticsearchService.updateNovel(novelId, esNovel);
 
 		// Invalidate user's recommendation cache after removing a rating
@@ -296,31 +297,31 @@ const NovelService = {
 	async incrementViewCount(novelId) {
 		const novel = await Novel.findByIdAndUpdate(
 			novelId, {
-				$inc: {
-					viewCount: 1
-				}
-			}, {
-				new: true
+			$inc: {
+				viewCount: 1
 			}
+		}, {
+			new: true
+		}
 		);
 
 		if (!novel) throw new NotFoundError(ERROR_MESSAGES.NOVEL_NOT_FOUND);
-		
+
 		const esNovel = prepareNovelForElasticsearch(novel);
-		
+
 		await elasticsearchService.updateNovel(novelId, esNovel);
 		return {
 			viewCount: novel.viewCount
 		};
 	},
-	
+
 	async getNovelsByAuthorId(authorId, query = {}) {
 		const page = parseInt(query.page) || 1;
 		const limit = parseInt(query.limit) || 20;
 		const skip = (page - 1) * limit;
 
 		const filter = { author: authorId };
-		
+
 		if (query.status) {
 			filter.status = query.status;
 		}
@@ -345,7 +346,7 @@ const NovelService = {
 			}
 		};
 	},
-	
+
 	async getMyNovels(userId, query = {}) {
 		console.log('Received userId:', userId, 'Type:', typeof userId);
 		const page = parseInt(query.page) || 1;
@@ -377,13 +378,13 @@ const NovelService = {
 		if (!user) {
 			throw new NotFoundError(USER_ERRORS.USER_NOT_FOUND);
 		}
-	        
-        const aggregateStats = await Novel.getAggregateAuthorStats(authorId);
-        
+
+		const aggregateStats = await Novel.getAggregateAuthorStats(authorId);
+
 		return {
 			aggregateStats,
 		};
-    },
+	},
 
 	async removeCover(novelId) {
 		const novel = await Novel.findByIdAndUpdate(

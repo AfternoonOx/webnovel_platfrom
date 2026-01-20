@@ -77,6 +77,11 @@ const novelSchema = new mongoose.Schema({
 			type: Number,
 			default: 0
 		}
+	},
+	isFeatured: {
+		type: Boolean,
+		default: false,
+		index: true
 	}
 }, {
 	timestamps: {
@@ -85,7 +90,7 @@ const novelSchema = new mongoose.Schema({
 	},
 	toJSON: {
 		virtuals: true,
-		transform: function(doc, ret) {
+		transform: function (doc, ret) {
 			// Don't include the binary data in the JSON response by default
 			if (ret.cover && ret.cover.data) {
 				ret.hasCover = true;
@@ -117,7 +122,7 @@ novelSchema.index({
 });
 
 // Pre-save middleware to update calculatedStats
-novelSchema.pre('save', function(next) {
+novelSchema.pre('save', function (next) {
 	if (this.isModified('ratings')) {
 		const ratings = this.ratings || [];
 		this.calculatedStats = {
@@ -130,7 +135,7 @@ novelSchema.pre('save', function(next) {
 	next();
 });
 
-novelSchema.methods.addRating = async function(userId, rating) {
+novelSchema.methods.addRating = async function (userId, rating) {
 	const existingRatingIndex = this.ratings.findIndex(r =>
 		r.user.toString() === userId.toString()
 	);
@@ -149,12 +154,12 @@ novelSchema.methods.addRating = async function(userId, rating) {
 	return this.save();
 };
 
-novelSchema.methods.getUserRating = function(userId) {
+novelSchema.methods.getUserRating = function (userId) {
 	const rating = this.ratings.find(r => r.user.toString() === userId.toString());
 	return rating ? rating.value : null;
 };
 
-novelSchema.methods.removeRating = async function(userId) {
+novelSchema.methods.removeRating = async function (userId) {
 	const initialLength = this.ratings.length;
 	this.ratings = this.ratings.filter(r => r.user.toString() !== userId.toString());
 
@@ -164,19 +169,19 @@ novelSchema.methods.removeRating = async function(userId) {
 	return this;
 };
 
-novelSchema.statics.incrementViewCount = async function(novelId) {
+novelSchema.statics.incrementViewCount = async function (novelId) {
 	return this.findByIdAndUpdate(
 		novelId, {
-			$inc: {
-				viewCount: 1
-			}
-		}, {
-			new: true
+		$inc: {
+			viewCount: 1
 		}
+	}, {
+		new: true
+	}
 	).select('viewCount');
 };
 
-novelSchema.statics.getRatingStats = async function(novelId) {
+novelSchema.statics.getRatingStats = async function (novelId) {
 	const novel = await this.findById(novelId).select('ratings calculatedStats');
 	if (!novel) return null;
 
@@ -195,50 +200,52 @@ novelSchema.statics.getRatingStats = async function(novelId) {
 	};
 };
 
-novelSchema.statics.getAggregateAuthorStats = async function(authorId) {
-    const novelStats = await this.aggregate([
-        { $match: { author: new mongoose.Types.ObjectId(authorId) } },
-        { $group: {
-            _id: null,
-            totalNovels: { $sum: 1 },
-            totalViews: { $sum: '$viewCount' },
-            avgRating: { 
-                $avg: {
-                    $cond: [
-                        { $gt: ['$calculatedStats.averageRating', 0] },
-                        '$calculatedStats.averageRating',
-                        null
-                    ]
-                }
-            },
-            totalRatings: { $sum: '$calculatedStats.ratingCount' },
-            totalChapters: { $sum: '$totalChapters' }
-        }}
-    ]);
-    
-    if (!novelStats.length) {
-        return {
-            totalNovels: 0,
-            totalViews: 0,
-            avgRating: 0,
-            totalRatings: 0,
-            totalChapters: 0,
-            totalChapterReads: 0,
-            totalWords: 0
-        };
-    }
+novelSchema.statics.getAggregateAuthorStats = async function (authorId) {
+	const novelStats = await this.aggregate([
+		{ $match: { author: new mongoose.Types.ObjectId(authorId) } },
+		{
+			$group: {
+				_id: null,
+				totalNovels: { $sum: 1 },
+				totalViews: { $sum: '$viewCount' },
+				avgRating: {
+					$avg: {
+						$cond: [
+							{ $gt: ['$calculatedStats.averageRating', 0] },
+							'$calculatedStats.averageRating',
+							null
+						]
+					}
+				},
+				totalRatings: { $sum: '$calculatedStats.ratingCount' },
+				totalChapters: { $sum: '$totalChapters' }
+			}
+		}
+	]);
 
-    const chapterStats = await mongoose.model('Chapter').getAggregateStatsByAuthor(authorId);
+	if (!novelStats.length) {
+		return {
+			totalNovels: 0,
+			totalViews: 0,
+			avgRating: 0,
+			totalRatings: 0,
+			totalChapters: 0,
+			totalChapterReads: 0,
+			totalWords: 0
+		};
+	}
 
-    return {
-        totalNovels: novelStats[0].totalNovels,
-        totalViews: novelStats[0].totalViews || 0,
-        avgRating: novelStats[0].avgRating ? parseFloat(novelStats[0].avgRating.toFixed(2)) : 0,
-        totalRatings: novelStats[0].totalRatings || 0,
-        totalChapters: novelStats[0].totalChapters || 0,
-        totalChapterReads: chapterStats ? chapterStats.totalChapterReads : 0,
-        totalWords: chapterStats ? chapterStats.totalWords : 0
-    };
+	const chapterStats = await mongoose.model('Chapter').getAggregateStatsByAuthor(authorId);
+
+	return {
+		totalNovels: novelStats[0].totalNovels,
+		totalViews: novelStats[0].totalViews || 0,
+		avgRating: novelStats[0].avgRating ? parseFloat(novelStats[0].avgRating.toFixed(2)) : 0,
+		totalRatings: novelStats[0].totalRatings || 0,
+		totalChapters: novelStats[0].totalChapters || 0,
+		totalChapterReads: chapterStats ? chapterStats.totalChapterReads : 0,
+		totalWords: chapterStats ? chapterStats.totalWords : 0
+	};
 };
 
 const Novel = mongoose.model('Novel', novelSchema);

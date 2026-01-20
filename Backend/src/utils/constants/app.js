@@ -8,25 +8,27 @@ exports.STATUS = {
     ACTIVE: 'active',
     INACTIVE: 'inactive',
     PENDING: 'pending',
-    BLOCKED: 'blocked'
+    BLOCKED: 'blocked',
+    DELETED: 'deleted'
 };
 
 exports.NOVEL_STATUS = {
     ONGOING: 'ongoing',
     COMPLETED: 'completed',
-    HIATUS: 'hiatus'
+    HIATUS: 'hiatus',
+    DELETED: 'deleted'
 };
 
 exports.API_MESSAGES = {
     PASSWORD_RESET_SUCCESS: 'Password has been reset successfully',
     RESET_LINK_SENT: 'If an account exists with that email, a password reset link will be sent.',
-	
+
 };
 
 exports.CONTENT_STATUS = {
     DRAFT: 'draft',
-    PUBLISHED: 'published'	
-	
+    PUBLISHED: 'published'
+
 };
 exports.API_STATUS = {
     SUCCESS: 'success',
@@ -39,5 +41,9 @@ exports.LIBRARY_STATUS = {
     WILL_READ: 'will_read',
     COMPLETED: 'completed',
     DROPPED: 'dropped',
-	ON_HOLD: 'on_hold'
+    ON_HOLD: 'on_hold'
+};
+
+exports.NOTIFICATION_TYPES = {
+    NEW_CHAPTER: 'new_chapter'
 };

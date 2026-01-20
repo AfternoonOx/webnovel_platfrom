@@ -24,6 +24,7 @@ SMTP_USER=your-smtp-user          # Optional
 SMTP_PASS=your-smtp-password      # Optional
 
 # Elasticsearch Configuration
-ELASTICSEARCH_NODE=http://200.234.224.159:9200/  # Required, defaults to http://localhost:9200
+ELASTICSEARCH_ENABLED=false
+ELASTICSEARCH_NODE=  # Required, defaults to http://localhost:9200
 ELASTICSEARCH_USERNAME=                   # Optional, default is empty
 ELASTICSEARCH_PASSWORD=                   # Optional, default is empty

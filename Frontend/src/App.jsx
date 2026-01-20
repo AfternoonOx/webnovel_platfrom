@@ -29,6 +29,12 @@ import ContactPage from './pages/ContactPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 
+import AdminLayout from './components/layout/AdminLayout';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import AdminNovelsPage from './pages/AdminNovelsPage';
+import AdminCommentsPage from './pages/AdminCommentsPage';
+
 // Protected route component
 const ProtectedRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
@@ -45,6 +51,34 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" />;
   }
   
+  return children;
+};
+
+const AdminRoute = ({ children }) => {
+  const { currentUser, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" />;
+  }
+
+  const isAdmin =
+    currentUser?.role === 'ADMIN' ||
+    currentUser?.role === 'admin' ||
+    currentUser?.roles?.includes?.('ADMIN') ||
+    currentUser?.roles?.includes?.('admin');
+
+  if (!isAdmin) {
+    return <Navigate to="/" />;
+  }
+
   return children;
 };
 
@@ -132,6 +166,20 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
+              }
+            >
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="novels" element={<AdminNovelsPage />} />
+              <Route path="comments" element={<AdminCommentsPage />} />
+            </Route>
             
             {/* Additional Pages */}
             <Route path="/faq" element={<FAQPage />} />

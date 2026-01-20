@@ -7,10 +7,12 @@ import Button from '../components/common/Button';
 import MobileNavigation from '../components/layout/MobileNavigation';
 import { useAuth } from '../hooks/useAuth';
 import AuthService from '../services/auth.service';
+import { useLanguage } from '../context/LanguageContext';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { currentUser, updateProfile, logout } = useAuth();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -89,12 +91,12 @@ const ProfilePage = () => {
 
     // Validate form
     if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-      setError('Nowe hasła nie są zgodne');
+      setError(t('profilePage.newPasswordsMismatch'));
       return;
     }
 
     if (formData.newPassword && !formData.currentPassword) {
-      setError('Obecne hasło jest wymagane przy zmianie hasła');
+      setError(t('profilePage.currentPasswordRequired'));
       return;
     }
 
@@ -129,7 +131,7 @@ const ProfilePage = () => {
         const response = await updateProfile(updateData);
 
         if (response.status === 'success') {
-          setMessage('Profil zaktualizowano pomyślnie');
+          setMessage(t('profilePage.updatedSuccess'));
 
           // Clear password fields
           setFormData(prevData => ({
@@ -140,13 +142,13 @@ const ProfilePage = () => {
           }));
         }
       } else {
-        setMessage('Nie wprowadzono żadnych zmian');
+        setMessage(t('profilePage.noChanges'));
       }
     } catch (err) {
       console.error('Profile update error:', err);
       const errorMsg = err.response?.data?.message || 
                       err.response?.data?.errors?.[0]?.msg || 
-                      'Nie udało się zaktualizować profilu';
+                      t('profilePage.updateFailed');
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -165,7 +167,7 @@ const ProfilePage = () => {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-8 pb-24 md:pb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Twój Profil</h1> {/* Przetłumaczone */}
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{t('profilePage.title')}</h1>
 
         {message && (
           <div className="bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400 p-4 rounded-md mb-6">
@@ -183,7 +185,7 @@ const ProfilePage = () => {
           <form onSubmit={handleProfileUpdate}>
             <div className="mb-4">
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Nazwa użytkownika {/* Przetłumaczone */}
+                {t('profilePage.username')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -203,7 +205,7 @@ const ProfilePage = () => {
 
             <div className="mb-4">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Email {/* Przetłumaczone, alternatywnie: Adres e-mail */}
+                {t('profilePage.email')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -223,9 +225,8 @@ const ProfilePage = () => {
 
             <div className="mb-4">
               <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Data urodzenia {/* Przetłumaczone */}
+                {t('profilePage.dateOfBirth')}
               </label>
-              
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaBirthdayCake className="text-gray-400" />
@@ -243,11 +244,11 @@ const ProfilePage = () => {
             </div>
 
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Zmień hasło</h3> {/* Przetłumaczone */}
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('profilePage.changePassword')}</h3>
 
               <div className="mb-4">
                 <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Obecne hasło {/* Przetłumaczone */}
+                  {t('profilePage.currentPassword')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -278,7 +279,7 @@ const ProfilePage = () => {
 
               <div className="mb-4">
                 <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Nowe hasło {/* Przetłumaczone */}
+                  {t('profilePage.newPassword')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -306,13 +307,13 @@ const ProfilePage = () => {
                   </button>
                 </div>
                 {formData.newPassword && formData.newPassword.length < 8 && (
-                  <p className="mt-1 text-xs text-red-500">Hasło musi mieć co najmniej 8 znaków</p> // Przetłumaczone
+                  <p className="mt-1 text-xs text-red-500">{t('profilePage.passwordMinLength')}</p>
                 )}
               </div>
 
               <div className="mb-6">
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Potwierdź nowe hasło {/* Przetłumaczone */}
+                  {t('profilePage.confirmNewPassword')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -341,7 +342,7 @@ const ProfilePage = () => {
                 </div>
                 {formData.newPassword && formData.confirmPassword &&
                   formData.newPassword !== formData.confirmPassword && (
-                  <p className="mt-1 text-xs text-red-500">Hasła nie są zgodne</p> // Przetłumaczone
+                  <p className="mt-1 text-xs text-red-500">{t('profilePage.passwordsDoNotMatch')}</p>
                 )}
               </div>
             </div>
@@ -352,14 +353,14 @@ const ProfilePage = () => {
                 variant="outline"
                 onClick={handleLogout}
               >
-                Wyloguj się {/* Przetłumaczone */}
+                {t('profilePage.logout')}
               </Button>
 
               <Button
                 type="submit"
                 disabled={loading}
               >
-                {loading ? 'Zapisywanie...' : 'Zapisz zmiany'} {/* Przetłumaczone */}
+                {loading ? t('profilePage.saving') : t('profilePage.saveChanges')}
               </Button>
             </div>
           </form>

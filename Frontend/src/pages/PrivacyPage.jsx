@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaShieldAlt } from 'react-icons/fa';
 import Layout from '../components/layout/Layout';
 import MobileNavigation from '../components/layout/MobileNavigation';
+import { useLanguage } from '../context/LanguageContext';
 
 const PrivacyPage = () => {
+  const { t } = useLanguage();
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8 pb-24 md:pb-8">
@@ -17,13 +20,13 @@ const PrivacyPage = () => {
           </Link>
           <div className="flex items-center">
             <FaShieldAlt className="text-indigo-500 mr-3" size={24} />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Polityka prywatności</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('privacyPage.title')}</h1>
           </div>
         </div>
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <div className="text-gray-700 dark:text-gray-300 space-y-6">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Ostatnia aktualizacja: 19 maja 2025</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.lastUpdated')} 19 maja 2025</p>
             
             <p className="leading-relaxed">
               W Opowiadamy poważnie traktujemy Twoją prywatność. Ta Polityka prywatności wyjaśnia, jak gromadzimy, używamy, ujawniamy i chronimy Twoje informacje podczas korzystania z naszej platformy. Prosimy o uważne przeczytanie tej polityki prywatności. Jeśli nie zgadzasz się z warunkami tej polityki prywatności, prosimy o nieporzystanie z platformy.

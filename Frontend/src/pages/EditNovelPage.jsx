@@ -8,12 +8,14 @@ import MobileNavigation from '../components/layout/MobileNavigation';
 import NovelService from '../services/novel.service';
 import { useAuth } from '../hooks/useAuth';
 import { GENRES, NOVEL_STATUS } from '../utils/constants';
+import { useLanguage } from '../context/LanguageContext';
 
 const EditNovelPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  
+  const { t } = useLanguage();
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -21,23 +23,22 @@ const EditNovelPage = () => {
     tags: [],
     status: NOVEL_STATUS.ONGOING
   });
-  
+
   const [originalCoverUrl, setOriginalCoverUrl] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [newTag, setNewTag] = useState('');
-  
-  // Fetch novel data
+
   useEffect(() => {
     const fetchNovel = async () => {
       if (!id) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await NovelService.getNovelById(id);
         if (response.status === 'success') {
           const novelData = response.data;
@@ -48,26 +49,24 @@ const EditNovelPage = () => {
             tags: novelData.tags || [],
             status: novelData.status || NOVEL_STATUS.ONGOING
           });
-          
-          // Set cover preview if available
+
           if (novelData.hasCover) {
             setOriginalCoverUrl(NovelService.getNovelCoverUrl(id));
           }
         } else {
-          setError('Nie udało się załadować danych powieści');
+          setError(t('editNovelPage.loadFailed'));
         }
       } catch (err) {
-        setError('Nie udało się załadować danych powieści. Spróbuj ponownie później.');
+        setError(t('editNovelPage.loadFailedLater'));
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchNovel();
-  }, [id]);
-  
-  // Check if user is authorized to edit this novel
+  }, [id, t]);
+
   useEffect(() => {
     const checkAuthorization = async () => {
       try {
@@ -75,8 +74,7 @@ const EditNovelPage = () => {
           navigate('/login', { state: { from: `/novels/${id}/edit` } });
           return;
         }
-        
-        // Get user's novels to check ownership
+
         const userNovels = await NovelService.getMyNovels();
         if (userNovels.status === 'success') {
           const novels = userNovels.data.data || userNovels.data;
@@ -84,7 +82,7 @@ const EditNovelPage = () => {
             const novelId = novel.id || novel._id;
             return novelId === id;
           });
-          
+
           if (!isAuthor) {
             navigate('/dashboard');
           }
@@ -94,10 +92,10 @@ const EditNovelPage = () => {
         navigate('/dashboard');
       }
     };
-    
+
     checkAuthorization();
   }, [id, currentUser, navigate]);
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -105,7 +103,7 @@ const EditNovelPage = () => {
       [name]: value
     });
   };
-  
+
   const handleGenreToggle = (genre) => {
     if (formData.genres.includes(genre)) {
       setFormData({
@@ -119,75 +117,74 @@ const EditNovelPage = () => {
           genres: [...formData.genres, genre]
         });
       } else {
-        alert('Możesz wybrać maksymalnie 5 gatunków');
+        alert(t('editNovelPage.maxGenresAlert', { max: 5 }));
       }
     }
   };
-  
+
   const handleAddTag = (e) => {
     e.preventDefault();
-    
+
     if (!newTag.trim()) return;
-    
+
     if (formData.tags.includes(newTag.trim())) {
-      alert('Ten tag już istnieje');
+      alert(t('editNovelPage.tagExistsAlert'));
       return;
     }
-    
+
     if (formData.tags.length >= 10) {
-      alert('Możesz dodać maksymalnie 10 tagów');
+      alert(t('editNovelPage.maxTagsAlert', { max: 10 }));
       return;
     }
-    
+
     setFormData({
       ...formData,
       tags: [...formData.tags, newTag.trim()]
     });
-    
+
     setNewTag('');
   };
-  
+
   const handleRemoveTag = (tag) => {
     setFormData({
       ...formData,
       tags: formData.tags.filter(t => t !== tag)
     });
   };
-  
+
   const handleCoverChange = (file) => {
     setCoverFile(file);
   };
-  
+
   const handleRemoveCover = () => {
     setCoverFile(null);
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.genres.length === 0) {
-      setError('Wybierz przynajmniej jeden gatunek');
+      setError(t('editNovelPage.selectGenreError'));
       return;
     }
-    
+
     try {
       setSaving(true);
       setError(null);
-      
+
       const response = await NovelService.updateNovel(id, formData, coverFile);
-      
+
       if (response.status === 'success') {
-        // Navigate back to the novel page
         navigate(`/novels/${id}`);
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Nie udało się zaktualizować powieści. Spróbuj ponownie.';
+      const errorMsg = err.response?.data?.message || t('editNovelPage.updateFailed');
       setError(errorMsg);
     } finally {
       setSaving(false);
     }
   };
-  
+
   if (loading) {
     return (
       <Layout>
@@ -197,7 +194,7 @@ const EditNovelPage = () => {
       </Layout>
     );
   }
-  
+
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-8 pb-24 md:pb-8">
@@ -209,21 +206,22 @@ const EditNovelPage = () => {
           >
             <FaArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edytuj Powieść</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('editNovelPage.title')}</h1>
         </div>
-        
+
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 p-4 rounded-md mb-6">
             {error}
           </div>
         )}
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tytuł <span className="text-red-500">*</span>
+                {t('createNovelPage.titleLabel')} <span className="text-red-500">*</span>
               </label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaBook className="text-gray-400" />
@@ -235,40 +233,42 @@ const EditNovelPage = () => {
                   value={formData.title}
                   onChange={handleChange}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
-                  placeholder="Wprowadź porywający tytuł"
+                  placeholder={t('createNovelPage.captivatingTitle')}
                   required
                   maxLength={100}
                 />
               </div>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Maksymalnie 100 znaków
+                {t('createNovelPage.maxChars', { max: 100 })}
               </p>
             </div>
-            
+
             <div className="mb-6">
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Opis <span className="text-red-500">*</span>
+                {t('createNovelPage.description')} <span className="text-red-500">*</span>
               </label>
+
               <textarea
                 id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
-                placeholder="Napisz fascynujący opis swojej powieści"
+                placeholder={t('createNovelPage.writeDescription')}
                 required
                 rows={5}
                 maxLength={1000}
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {formData.description.length}/1000 znaków
+                {t('createNovelPage.charsCount', { current: formData.description.length, max: 1000 })}
               </p>
             </div>
-            
+
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Gatunki <span className="text-red-500">*</span> <span className="text-gray-500 dark:text-gray-400 text-xs">(Wybierz maksymalnie 5)</span>
+                {t('createNovelPage.genres')} <span className="text-red-500">*</span> <span className="text-gray-500 dark:text-gray-400 text-xs">{t('createNovelPage.selectUpTo', { max: 5 })}</span>
               </label>
+
               <div className="flex flex-wrap gap-2">
                 {GENRES.map(genre => (
                   <button
@@ -287,15 +287,16 @@ const EditNovelPage = () => {
               </div>
               {formData.genres.length === 0 && (
                 <p className="mt-1 text-xs text-red-500">
-                  Wybierz przynajmniej jeden gatunek
+                  {t('createNovelPage.selectAtLeastOne')}
                 </p>
               )}
             </div>
-            
+
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tagi <span className="text-gray-500 dark:text-gray-400 text-xs">(Opcjonalne, maksymalnie 10)</span>
+                {t('createNovelPage.tags')} <span className="text-gray-500 dark:text-gray-400 text-xs">{t('createNovelPage.optional', { max: 10 })}</span>
               </label>
+
               <div className="flex flex-wrap gap-2 mb-2">
                 {formData.tags.map(tag => (
                   <div
@@ -323,7 +324,7 @@ const EditNovelPage = () => {
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
-                    placeholder="Dodaj tag"
+                    placeholder={t('createNovelPage.addTag')}
                     maxLength={20}
                   />
                 </div>
@@ -333,18 +334,19 @@ const EditNovelPage = () => {
                   className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
                   disabled={!newTag.trim() || formData.tags.length >= 10}
                 >
-                  Dodaj
+                  {t('common.add')}
                 </button>
               </div>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Tagi pomagają czytelnikom znaleźć twoją powieść (maksymalnie 20 znaków na tag)
+                {t('editNovelPage.tagsHelp', { max: 20 })}
               </p>
             </div>
-            
+
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Status <span className="text-red-500">*</span>
+                {t('createNovelPage.status')} <span className="text-red-500">*</span>
               </label>
+
               <div className="flex space-x-4">
                 <label className="flex items-center">
                   <input
@@ -355,7 +357,7 @@ const EditNovelPage = () => {
                     onChange={handleChange}
                     className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">W trakcie</span>
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('createNovelPage.ongoing')}</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -366,23 +368,23 @@ const EditNovelPage = () => {
                     onChange={handleChange}
                     className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Zakończona</span>
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('createNovelPage.completed')}</span>
                 </label>
               </div>
             </div>
-            
+
             <div className="mb-6">
               <ImageUploader
-                label="Okładka"
+                label={t('createNovelPage.coverImage')}
                 onChange={handleCoverChange}
                 onRemove={handleRemoveCover}
                 defaultImage={originalCoverUrl}
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Dobra okładka może przyciągnąć więcej czytelników. Zalecany rozmiar: 600x900 pikseli.
+                {t('createNovelPage.coverHelp')}
               </p>
             </div>
-            
+
             <div className="flex justify-end">
               <Button
                 type="button"
@@ -390,19 +392,19 @@ const EditNovelPage = () => {
                 className="mr-2"
                 onClick={() => navigate(-1)}
               >
-                Anuluj
+                {t('createNovelPage.cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={saving || formData.genres.length === 0}
               >
-                {saving ? 'Zapisywanie...' : 'Zapisz Zmiany'}
+                {saving ? t('editNovelPage.saving') : t('editNovelPage.saveChanges')}
               </Button>
             </div>
           </form>
         </div>
       </div>
-      
+
       <MobileNavigation />
     </Layout>
   );

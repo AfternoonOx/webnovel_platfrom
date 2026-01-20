@@ -1,22 +1,22 @@
 exports.HTTP_STATUS = {
-	OK: 200,
-	CREATED: 201,
-	NO_CONTENT: 204,
-	BAD_REQUEST: 400,
-	UNAUTHORIZED: 401,
-	FORBIDDEN: 403,
-	NOT_FOUND: 404,
-	CONFLICT: 409,
-	TOO_MANY_REQUESTS: 429,
-	INTERNAL_SERVER_ERROR: 500,
-	SERVICE_UNAVAILABLE: 503
+    OK: 200,
+    CREATED: 201,
+    NO_CONTENT: 204,
+    BAD_REQUEST: 400,
+    UNAUTHORIZED: 401,
+    FORBIDDEN: 403,
+    NOT_FOUND: 404,
+    CONFLICT: 409,
+    TOO_MANY_REQUESTS: 429,
+    INTERNAL_SERVER_ERROR: 500,
+    SERVICE_UNAVAILABLE: 503
 };
 
 exports.AUTH_ERRORS = {
     UNAUTHORIZED: 'Authentication failed',
     MISSING_TOKEN: 'No authentication token provided',
-    INVALID_TOKEN_TYPE: 'Invalid token type', 
-	INVALID_TOKEN: 'Invalid token',
+    INVALID_TOKEN_TYPE: 'Invalid token type',
+    INVALID_TOKEN: 'Invalid token',
     INVALID_REFRESH_TOKEN: 'Invalid refresh token',
     INVALID_RESET_TOKEN: 'Invalid reset token',
     REFRESH_TOKEN_EXPIRED: 'Refresh token expired',
@@ -43,20 +43,20 @@ exports.AUTH_ERRORS = {
 };
 
 exports.USER_ERRORS = {
-	USER_NOT_FOUND: 'User not found',
-	USER_EXISTS: 'User already exists',
-	EMAIL_USERNAME_EXISTS: 'Email or username already exists',
-	INVALID_ROLE: 'Invalid user role'
+    USER_NOT_FOUND: 'User not found',
+    USER_EXISTS: 'User already exists',
+    EMAIL_USERNAME_EXISTS: 'Email or username already exists',
+    INVALID_ROLE: 'Invalid user role'
 };
 
 exports.SYSTEM_ERRORS = {
-	SERVER_ERROR: 'Internal server error',
-	VALIDATION_ERROR: 'Validation failed',
-	DATABASE_ERROR: 'Database operation failed',
-	FILE_UPLOAD_ERROR: 'File upload failed',
-	TIMEOUT: 'Request timeout exceeded',
-	TOO_MANY_REQUESTS: 'Too many requests from this IP, please try again later.',
-	CORS_ERROR: 'Not allowed by CORS'
+    SERVER_ERROR: 'Internal server error',
+    VALIDATION_ERROR: 'Validation failed',
+    DATABASE_ERROR: 'Database operation failed',
+    FILE_UPLOAD_ERROR: 'File upload failed',
+    TIMEOUT: 'Request timeout exceeded',
+    TOO_MANY_REQUESTS: 'Too many requests from this IP, please try again later.',
+    CORS_ERROR: 'Not allowed by CORS'
 };
 
 exports.NOVEL_ERRORS = {
@@ -66,8 +66,8 @@ exports.NOVEL_ERRORS = {
     NO_CHAPTERS_FOUND: 'No chapters found',
     NO_ANALYTICS_FOUND: 'No analytics data found',
     INVALID_SEARCH_PARAMS: 'Invalid search parameters',
-    NOVEL_ID_REQUIRED: 'novelId is required',	
-	NOVEL_ACCESS_DENIED: 'You are not authorized to modify this novel',
+    NOVEL_ID_REQUIRED: 'novelId is required',
+    NOVEL_ACCESS_DENIED: 'You are not authorized to modify this novel',
     NOVEL_ALREADY_IN_LIBRARY: 'Novel already exists in library',
     NOVEL_NOT_IN_LIBRARY: 'Novel not found in library. Please add it to your library first.',
     EPUB_PARSE_ERROR: 'Failed to parse EPUB file',
@@ -82,4 +82,16 @@ exports.COMMENT_ERRORS = {
     INVALID_PARENT_COMMENT: 'Parent comment does not exist or is invalid',
     COMMENT_ACCESS_DENIED: 'You are not authorized to modify this comment',
     COMMENT_ALREADY_DELETED: 'Comment has already been deleted'
+};
+
+exports.ADMIN_ERRORS = {
+    CANNOT_MODIFY_SELF: 'Admins cannot modify their own account via admin panel',
+    INVALID_STATUS: 'Invalid user status',
+    USER_NOT_DELETED: 'User is not in deleted state',
+    INVALID_NOVEL_STATUS: 'Invalid novel status'
+};
+
+exports.NOTIFICATION_ERRORS = {
+    NOTIFICATION_NOT_FOUND: 'Notification not found',
+    NOTIFICATION_ACCESS_DENIED: 'You are not authorized to access this notification'
 };

@@ -54,16 +54,18 @@ const envVariables = {
 	SMTP_PASS: {
 		required: false
 	},
-	
-	
-	// Elastic search
-	
+
+	// Elasticsearch (optional)
+	ELASTICSEARCH_ENABLED: {
+		required: false,
+		type: 'string',
+		default: 'false'
+	},
 	ELASTICSEARCH_NODE: {
-		required: true,
+		required: false,
 		type: 'string',
 		default: 'http://localhost:9200'
 	},
-	
 	ELASTICSEARCH_USERNAME: {
 		required: false,
 		type: 'string',

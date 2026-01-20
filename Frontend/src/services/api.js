@@ -15,7 +15,17 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      const authHeaderValue = `Bearer ${token}`;
+      if (!config.headers) {
+        config.headers = {};
+      }
+
+      if (typeof config.headers.set === 'function') {
+        config.headers.set('Authorization', authHeaderValue);
+      } else {
+        config.headers.Authorization = authHeaderValue;
+        config.headers.authorization = authHeaderValue;
+      }
     }
     return config;
   },

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
+import { useLanguage } from '../../context/LanguageContext';
 
 const RichTextEditor = ({ 
   value = '', 
   onChange, 
-  placeholder = 'Write something...', 
+  placeholder, 
   readOnly = false,
   height = '300px'
 }) => {
+  const { t } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   const [editorValue, setEditorValue] = useState(value);
 
@@ -54,7 +56,7 @@ const RichTextEditor = ({
         style={{ height }}
         className="border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 flex items-center justify-center"
       >
-        <span className="text-gray-500 dark:text-gray-400">Loading editor...</span>
+        <span className="text-gray-500 dark:text-gray-400">{t('richTextEditor.loading')}</span>
       </div>
     );
   }
@@ -65,7 +67,7 @@ const RichTextEditor = ({
         theme="snow"
         value={editorValue}
         onChange={handleChange}
-        placeholder={placeholder}
+        placeholder={placeholder || t('richTextEditor.defaultPlaceholder')}
         readOnly={readOnly}
         modules={modules}
         formats={formats}

@@ -72,7 +72,7 @@ const ChapterReader = ({ chapter, novel, nextChapter, prevChapter }) => {
         <button 
           onClick={() => setShowSettings(!showSettings)}
           className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 w-10 text-right"
-          aria-label="Reader settings"
+          aria-label={t('ui.readerSettingsAria')}
         >
           <FaCog className="text-lg ml-auto" />
         </button>

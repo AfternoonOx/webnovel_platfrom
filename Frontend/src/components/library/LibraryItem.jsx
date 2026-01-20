@@ -129,7 +129,7 @@ const LibraryItem = ({ item, onStatusChange, onRemove }) => {
               <button 
                 onClick={() => setMenuOpen(!menuOpen)} 
                 className="p-2 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-                aria-label="Options"
+                aria-label={t('ui.optionsAria')}
               >
                 <FaEllipsisH />
               </button>

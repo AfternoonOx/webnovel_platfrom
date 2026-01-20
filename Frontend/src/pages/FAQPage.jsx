@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaQuestionCircle, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import Layout from '../components/layout/Layout'; // Assuming these components exist
 import MobileNavigation from '../components/layout/MobileNavigation'; // Assuming these components exist
+import { useLanguage } from '../context/LanguageContext';
 
 const FAQPage = () => {
+  const { t } = useLanguage();
+
   // State to track which categories are expanded
   const [expandedCategories, setExpandedCategories] = useState({
     'Ogólne': true, // Open the first category by default
@@ -104,6 +107,13 @@ const FAQPage = () => {
     ]
   };
 
+  const categoryKeyToLabel = {
+    'Ogólne': t('faqPage.categories.general'),
+    'Czytanie': t('faqPage.categories.reading'),
+    'Pisanie': t('faqPage.categories.writing'),
+    'Konto i Wsparcie': t('faqPage.categories.accountSupport')
+  };
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8 pb-24 md:pb-8">
@@ -114,7 +124,7 @@ const FAQPage = () => {
           >
             <FaArrowLeft size={20} />
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Najczęściej Zadawane Pytania</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('faqPage.title')}</h1>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -135,7 +145,7 @@ const FAQPage = () => {
                   setExpandedCategories(resetCategories);
                 }}
               >
-                {category}
+                {categoryKeyToLabel[category] || category}
               </button>
             ))}
           </div>
@@ -176,13 +186,13 @@ const FAQPage = () => {
           </div>
 
           <div className="mt-8 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-            <h3 className="text-lg font-medium text-indigo-700 dark:text-indigo-300 mb-2">Nadal masz pytania?</h3>
-            <p className="text-indigo-600 dark:text-indigo-400 mb-4">Jeśli nie znalazłeś(-aś) odpowiedzi na swoje pytanie, skontaktuj się z nami.</p>
+            <h3 className="text-lg font-medium text-indigo-700 dark:text-indigo-300 mb-2">{t('faqPage.stillHaveQuestionsTitle')}</h3>
+            <p className="text-indigo-600 dark:text-indigo-400 mb-4">{t('faqPage.stillHaveQuestionsDescription')}</p>
             <Link
               to="/contact" // Assuming this route exists
               className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
             >
-              Skontaktuj się z pomocą
+              {t('faqPage.contactSupport')}
             </Link>
           </div>
         </div>

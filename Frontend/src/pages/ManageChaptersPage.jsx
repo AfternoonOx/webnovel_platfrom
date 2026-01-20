@@ -57,13 +57,13 @@ const ManageChaptersPage = () => {
             const chaptersData = chaptersResponse.data.chapters || chaptersResponse.data;
             setChapters(Array.isArray(chaptersData) ? chaptersData : []);
           } else {
-            setError('Failed to load chapters');
+            setError(t('manageChaptersPage.loadChaptersFailed'));
           }
         } else {
-          setError('Failed to load novel data');
+          setError(t('manageChaptersPage.loadNovelFailed'));
         }
       } catch (err) {
-        setError('Failed to load data. Please try again later.');
+        setError(t('manageChaptersPage.loadFailedLater'));
         console.error(err);
       } finally {
         setLoading(false);
@@ -202,7 +202,7 @@ const ManageChaptersPage = () => {
   
   // Handle chapter deletion
   const handleDeleteChapter = async (chapterNumber) => {
-    if (!confirm(`Are you sure you want to delete Chapter ${chapterNumber}? This action cannot be undone.`)) {
+    if (!confirm(t('manageChaptersPage.confirmDelete', { chapterNumber }))) {
       return;
     }
     
@@ -215,10 +215,10 @@ const ManageChaptersPage = () => {
         // Update chapters list
         setChapters(chapters.filter(chapter => chapter.chapterNumber !== chapterNumber));
       } else {
-        alert('Failed to delete chapter. Please try again.');
+        alert(t('manageChapters.deleteFailed'));
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to delete chapter. Please try again.';
+      const errorMsg = err.response?.data?.message || t('manageChapters.deleteFailed');
       alert(errorMsg);
       console.error('Failed to delete chapter:', err);
     } finally {
@@ -426,12 +426,12 @@ const ManageChaptersPage = () => {
                         </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           chapter.status === CHAPTER_STATUS.PUBLISHED 
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
                             : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                         }`}>
-                          {chapter.status === CHAPTER_STATUS.PUBLISHED ? 'Opublikowany' : 'Szkic'}
+                          {chapter.status === CHAPTER_STATUS.PUBLISHED ? t('createChapterPage.published') : t('createChapterPage.draft')}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -456,7 +456,7 @@ const ManageChaptersPage = () => {
                             to={`/novels/${novelId}/chapters/${chapter.chapterNumber}/edit`}
                             variant="outline"
                             size="sm"
-                            title="Edit Chapter"
+                            title={t('manageChaptersPage.editChapterTitle')}
                           >
                             <FaEdit />
                           </Button>
@@ -465,7 +465,7 @@ const ManageChaptersPage = () => {
                             to={`/novels/${novelId}/chapters/${chapter.chapterNumber}`}
                             variant="outline"
                             size="sm"
-                            title="View Chapter"
+                            title={t('manageChaptersPage.viewChapterTitle')}
                           >
                             <FaEye />
                           </Button>
@@ -473,7 +473,7 @@ const ManageChaptersPage = () => {
                             onClick={() => handleDeleteChapter(chapter.chapterNumber)}
                             variant="danger"
                             size="sm"
-                            title="Delete Chapter"
+                            title={t('manageChaptersPage.deleteChapterTitle')}
                             disabled={loading}
                           >
                             <FaTrash />

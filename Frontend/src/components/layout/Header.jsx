@@ -16,6 +16,8 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activePath, setActivePath] = useState('/');
 
+  const isAdmin = currentUser?.role === 'admin';
+
   // Update active path when location changes
   useEffect(() => {
     const path = location.pathname;
@@ -117,6 +119,9 @@ const Header = () => {
                       <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">{t('header.profile')}</Link>
                       <Link to={`/authors/${currentUser.id || currentUser._id}`} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">{t('header.myNovels')}</Link>
                       <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">{t('header.dashboard')}</Link>
+                      {isAdmin && (
+                        <Link to="/admin" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">{t('header.admin')}</Link>
+                      )}
                       <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                         {t('header.logout')}
                       </button>
@@ -202,6 +207,9 @@ const Header = () => {
                 <Link to="/profile" className="block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">{t('header.profile')}</Link>
                 <Link to={`/authors/${currentUser.id || currentUser._id}`} className="block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">{t('header.myNovels')}</Link>
                 <Link to="/dashboard" className="block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">{t('header.dashboard')}</Link>
+                {isAdmin && (
+                  <Link to="/admin" className="block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">{t('header.admin')}</Link>
+                )}
                 <button onClick={handleLogout} className="w-full text-left block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
                   {t('header.logout')}
                 </button>

@@ -9,12 +9,14 @@ import NovelService from '../services/novel.service';
 import ChapterService from '../services/chapter.service';
 import { useAuth } from '../hooks/useAuth';
 import { CHAPTER_STATUS } from '../utils/constants';
+import { useLanguage } from '../context/LanguageContext';
 
 const EditChapterPage = () => {
   const { novelId, chapterNumber } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  
+  const { t } = useLanguage();
+
   const [novel, setNovel] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -22,25 +24,25 @@ const EditChapterPage = () => {
     status: CHAPTER_STATUS.DRAFT,
     chapterNumber: parseInt(chapterNumber) || 1
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Fetch novel and chapter data
   useEffect(() => {
     const fetchData = async () => {
       if (!novelId || !chapterNumber) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        
+
         // Get novel details
         const novelResponse = await NovelService.getNovelById(novelId);
         if (novelResponse.status === 'success') {
           setNovel(novelResponse.data);
-          
+
           // Get chapter details
           const chapterResponse = await ChapterService.getChapter(novelId, chapterNumber);
           if (chapterResponse.status === 'success') {
@@ -52,22 +54,22 @@ const EditChapterPage = () => {
               chapterNumber: parseInt(chapterNumber) || 1
             });
           } else {
-            setError('Nie udało się załadować danych rozdziału');
+            setError(t('editChapterPage.loadChapterFailed'));
           }
         } else {
-          setError('Nie udało się załadować danych powieści');
+          setError(t('editChapterPage.loadNovelFailed'));
         }
       } catch (err) {
-        setError('Nie udało się załadować danych. Spróbuj ponownie później.');
+        setError(t('editChapterPage.loadFailedLater'));
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [novelId, chapterNumber]);
-  
+
   // Check if user is authorized to edit this chapter
   useEffect(() => {
     const checkAuthorization = async () => {
@@ -76,7 +78,7 @@ const EditChapterPage = () => {
           navigate('/login', { state: { from: `/novels/${novelId}/chapters/${chapterNumber}/edit` } });
           return;
         }
-        
+
         // Get user's novels to check ownership
         const userNovels = await NovelService.getMyNovels();
         if (userNovels.status === 'success') {
@@ -85,7 +87,7 @@ const EditChapterPage = () => {
             const id = novel.id || novel._id;
             return id === novelId;
           });
-          
+
           if (!isAuthor) {
             navigate('/dashboard');
           }
@@ -95,10 +97,10 @@ const EditChapterPage = () => {
         navigate('/dashboard');
       }
     };
-    
+
     checkAuthorization();
   }, [novelId, currentUser, navigate, chapterNumber]);
-  
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -106,41 +108,41 @@ const EditChapterPage = () => {
       [name]: value
     });
   };
-  
+
   const handleContentChange = (content) => {
     setFormData({
       ...formData,
       content
     });
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate content length
     if (formData.content.length < 100) {
-      setError('Treść rozdziału musi mieć co najmniej 100 znaków.');
+      setError(t('createChapterPage.contentLengthError'));
       return;
     }
-    
+
     try {
       setSaving(true);
       setError(null);
-      
+
       const response = await ChapterService.updateChapter(novelId, chapterNumber, formData);
-      
+
       if (response.status === 'success') {
         // Navigate to the chapter page or novel details page
         navigate(`/novels/${novelId}/chapters/${chapterNumber}`);
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Nie udało się zaktualizować rozdziału. Spróbuj ponownie.';
+      const errorMsg = err.response?.data?.message || t('editChapterPage.updateFailed');
       setError(errorMsg);
     } finally {
       setSaving(false);
     }
   };
-  
+
   if (loading) {
     return (
       <Layout>
@@ -150,7 +152,7 @@ const EditChapterPage = () => {
       </Layout>
     );
   }
-  
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8 pb-24 md:pb-8">
@@ -163,27 +165,28 @@ const EditChapterPage = () => {
             <FaArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edytuj Rozdział {chapterNumber}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('editChapterPage.title', { chapterNumber })}</h1>
             {novel && (
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Powieść: {novel.title}
+                {t('editChapterPage.novelLabel')} {novel.title}
               </p>
             )}
           </div>
         </div>
-        
+
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 p-4 rounded-md mb-6">
             {error}
           </div>
         )}
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tytuł Rozdziału <span className="text-red-500">*</span>
+                {t('createChapterPage.chapterTitle')} <span className="text-red-500">*</span>
               </label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaHeading className="text-gray-400" />
@@ -195,32 +198,33 @@ const EditChapterPage = () => {
                   value={formData.title}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
-                  placeholder="Wprowadź tytuł rozdziału"
+                  placeholder={t('createChapterPage.titlePlaceholder')}
                   required
                   maxLength={200}
                 />
               </div>
             </div>
-            
+
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Treść Rozdziału <span className="text-red-500">*</span>
+                {t('createChapterPage.chapterContent')} <span className="text-red-500">*</span>
               </label>
               <RichTextEditor
                 value={formData.content}
                 onChange={handleContentChange}
-                placeholder="Napisz treść swojego rozdziału tutaj..."
+                placeholder={t('createChapterPage.contentPlaceholder')}
                 height="500px"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Wymagane minimum 100 znaków
+                {t('createChapterPage.minimumChars')}
               </p>
             </div>
-            
+
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Status <span className="text-red-500">*</span>
+                {t('createChapterPage.status')} <span className="text-red-500">*</span>
               </label>
+
               <div className="flex space-x-4">
                 <label className="flex items-center">
                   <input
@@ -231,9 +235,10 @@ const EditChapterPage = () => {
                     onChange={handleInputChange}
                     className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Szkic</span>
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('createChapterPage.draft')}</span>
                 </label>
                 <label className="flex items-center">
+
                   <input
                     type="radio"
                     name="status"
@@ -242,14 +247,14 @@ const EditChapterPage = () => {
                     onChange={handleInputChange}
                     className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Opublikowany</span>
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('createChapterPage.published')}</span>
                 </label>
               </div>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Rozdziały w szkicu są widoczne tylko dla Ciebie do momentu publikacji
+                {t('createChapterPage.draftInfo')}
               </p>
             </div>
-            
+
             <div className="flex justify-end">
               <Button
                 type="button"
@@ -257,19 +262,19 @@ const EditChapterPage = () => {
                 className="mr-2"
                 onClick={() => navigate(-1)}
               >
-                Anuluj
+                {t('createChapterPage.cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={saving}
               >
-                {saving ? 'Zapisywanie...' : 'Zapisz Zmiany'}
+                {saving ? t('createChapterPage.saving') : t('editNovelPage.saveChanges')}
               </Button>
             </div>
           </form>
         </div>
       </div>
-      
+
       <MobileNavigation />
     </Layout>
   );

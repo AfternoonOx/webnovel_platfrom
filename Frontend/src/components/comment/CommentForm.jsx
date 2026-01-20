@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { FaSpinner } from 'react-icons/fa';
 import Button from '../common/Button';
+import { useLanguage } from '../../context/LanguageContext';
 
 const CommentForm = ({ 
   onSubmit, 
   onCancel, 
   initialValue = '', 
-  placeholder = 'Napisz coś...', 
+  placeholder, 
   isEdit = false 
 }) => {
+  const { t } = useLanguage();
   const [content, setContent] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -19,12 +21,12 @@ const CommentForm = ({
     
     // Validate content
     if (!content.trim()) {
-      setError('Comment cannot be empty');
+      setError(t('comments.emptyError'));
       return;
     }
     
     if (content.length > 1000) {
-      setError('Comment is too long (maximum 1000 characters)');
+      setError(t('comments.tooLongError'));
       return;
     }
     
@@ -40,7 +42,7 @@ const CommentForm = ({
         setContent('');
       }
     } catch (err) {
-      setError('Failed to submit comment. Please try again.');
+      setError(t('comments.submitFailed'));
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -58,7 +60,7 @@ const CommentForm = ({
       <textarea
         value={content}
         onChange={handleChange}
-        placeholder={placeholder}
+        placeholder={placeholder || t('comments.formPlaceholder')}
         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white resize-none"
         rows={3}
         disabled={isSubmitting}
@@ -79,7 +81,7 @@ const CommentForm = ({
             onClick={onCancel}
             disabled={isSubmitting}
           >
-            Cancel
+            {t('comments.cancel')}
           </Button>
         )}
         
@@ -91,16 +93,16 @@ const CommentForm = ({
           {isSubmitting ? (
             <>
               <FaSpinner className="animate-spin mr-2" />
-              {isEdit ? 'Saving...' : 'Submitting...'}
+              {isEdit ? t('comments.saving') : t('comments.submitting')}
             </>
           ) : (
-            isEdit ? 'Wyślij' : 'Wyślij'
+            t('comments.send')
           )}
         </Button>
       </div>
       
       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-right">
-        {content.length}/1000 characters
+        {t('comments.charCount', { current: content.length })}
       </p>
     </form>
   );

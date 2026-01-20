@@ -7,6 +7,7 @@ const {
 const {
 	NOVEL_ERRORS
 } = require('../utils/constants');
+const NotificationService = require('./notification.service');
 
 const ChapterService = {
 	async createChapter(novelId, chapterData) {
@@ -29,47 +30,52 @@ const ChapterService = {
 			novelId
 		});
 
+		NotificationService.notifyNewChapter(novelId, {
+			chapterNumber: chapter.chapterNumber,
+			chapterTitle: chapter.title
+		}).catch(() => { });
+
 		return chapter;
 	},
 
 	async getChaptersByNovelId(novelId, query = {}) {
-	const page = parseInt(query.page) || 1;
-	const limit = parseInt(query.limit) || 20;
-	const skip = (page - 1) * limit;
+		const page = parseInt(query.page) || 1;
+		const limit = parseInt(query.limit) || 20;
+		const skip = (page - 1) * limit;
 
-	const totalCount = await Chapter.countDocuments({
-	 novelId
-	});
+		const totalCount = await Chapter.countDocuments({
+			novelId
+		});
 
-	if (totalCount === 0) {
-	return {
-	 chapters: [],
-	  metadata: {
+		if (totalCount === 0) {
+			return {
+				chapters: [],
+				metadata: {
 					total: 0,
-	   page,
-	   totalPages: 0
-	  }
-	};
-	}
+					page,
+					totalPages: 0
+				}
+			};
+		}
 
-	const chapters = await Chapter.find({
-				novelId
-	 })
-	.sort({
-	chapterNumber: 1
-	})
-	.skip(skip)
-	.limit(limit)
-	.select('chapterNumber title status readCount wordCount estimatedReadTime createdAt lastUpdatedAt');
+		const chapters = await Chapter.find({
+			novelId
+		})
+			.sort({
+				chapterNumber: 1
+			})
+			.skip(skip)
+			.limit(limit)
+			.select('chapterNumber title status readCount wordCount estimatedReadTime createdAt lastUpdatedAt');
 
-	return {
-	 chapters,
+		return {
+			chapters,
 			metadata: {
-	  total: totalCount,
-	 page,
-	totalPages: Math.ceil(totalCount / limit)
-	}
-	};
+				total: totalCount,
+				page,
+				totalPages: Math.ceil(totalCount / limit)
+			}
+		};
 	},
 
 	async getChapterByNumber(novelId, chapterNumber, opts = {}) {
@@ -100,22 +106,22 @@ const ChapterService = {
 						$lt: chapter.chapterNumber
 					}
 				})
-				.sort({
-					chapterNumber: -1
-				})
-				.select('chapterNumber')
-				.lean(),
+					.sort({
+						chapterNumber: -1
+					})
+					.select('chapterNumber')
+					.lean(),
 				Chapter.findOne({
 					novelId,
 					chapterNumber: {
 						$gt: chapter.chapterNumber
 					}
 				})
-				.sort({
-					chapterNumber: 1
-				})
-				.select('chapterNumber')
-				.lean()
+					.sort({
+						chapterNumber: 1
+					})
+					.select('chapterNumber')
+					.lean()
 			]);
 
 			return {
@@ -132,13 +138,13 @@ const ChapterService = {
 
 	async updateChapter(novelId, chapterNumber, updateData) {
 		const chapter = await Chapter.findOneAndUpdate({
-				novelId,
-				chapterNumber
-			},
+			novelId,
+			chapterNumber
+		},
 			updateData, {
-				new: true,
-				runValidators: true
-			}
+			new: true,
+			runValidators: true
+		}
 		);
 
 		if (!chapter) {

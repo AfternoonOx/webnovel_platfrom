@@ -7,9 +7,11 @@ import Layout from '../components/layout/Layout';
 import MobileNavigation from '../components/layout/MobileNavigation';
 import Button from '../components/common/Button';
 import { formatDate } from '../utils/helpers';
+import { useLanguage } from '../context/LanguageContext';
 
 const AuthorPage = () => {
   const { id } = useParams();
+  const { t, language } = useLanguage();
   const [author, setAuthor] = useState(null);
   const [novels, setNovels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,7 @@ const AuthorPage = () => {
           setNovels([]);
         }
       } catch (err) {
-        setError('Nie udało się wczytać danych autora. Spróbuj ponownie później.');
+        setError(t('authorPage.loadFailedLater'));
         console.error(err);
       } finally {
         setLoading(false);
@@ -47,7 +49,17 @@ const AuthorPage = () => {
     };
     
     fetchAuthorData();
-  }, [id]);
+  }, [id, t]);
+
+  const getNovelCountLabel = (count) => {
+    if (language !== 'pl') {
+      return count === 1 ? t('authorPage.novelsCountOne') : t('authorPage.novelsCountMany');
+    }
+
+    if (count === 1) return t('authorPage.novelsCountOne');
+    if (count >= 2 && count <= 4) return t('authorPage.novelsCountFew');
+    return t('authorPage.novelsCountMany');
+  };
 
   return (
     <Layout>
@@ -56,13 +68,13 @@ const AuthorPage = () => {
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">Ładowanie profilu autora...</p>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">{t('authorPage.loadingProfile')}</p>
             </div>
           ) : error ? (
             <div className="text-center py-12">
               <p className="text-red-500">{error}</p>
               <Button onClick={() => window.location.reload()} className="mt-4">
-                Spróbuj ponownie
+                {t('authorPage.tryAgain')}
               </Button>
             </div>
           ) : (
@@ -78,13 +90,16 @@ const AuthorPage = () => {
                   {/* Author Info */}
                   <div className="flex-1 text-center md:text-left">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                      {author?.username || 'Nieznany autor'}
+                      {author?.username || t('authorPage.unknownAuthor')}
                     </h1>
                     
                     <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4 text-gray-600 dark:text-gray-300">
                       <div className="flex items-center">
                         <FaBook className="mr-2 text-indigo-500" />
-                        <span>{novels.length} {novels.length === 1 ? 'Powieść' : novels.length > 1 && novels.length < 5 ? 'Powieści' : 'Powieści'}</span>
+                        <span>
+                          {novels.length}{' '}
+                          {getNovelCountLabel(novels.length)}
+                        </span>
                       </div>
                       
                       <div className="flex items-center">
@@ -96,14 +111,14 @@ const AuthorPage = () => {
                               ? (novelsWithRating.reduce((sum, novel) => sum + novel.calculatedStats.averageRating, 0) / novelsWithRating.length).toFixed(1)
                               : '0.0';
                             return avgRating;
-                          })()} Średnia ocena
+                          })()} {t('authorPage.averageRating')}
                         </span>
                       </div>
                       
                       {author?.createdAt && (
                         <div className="flex items-center">
                           <FaCalendarAlt className="mr-2 text-indigo-500" />
-                          <span>Członek od {formatDate(author.createdAt)}</span>
+                          <span>{t('authorPage.memberSince', { date: formatDate(author.createdAt) })}</span>
                         </div>
                       )}
                     </div>
@@ -121,8 +136,8 @@ const AuthorPage = () => {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                   {novels.length > 0 
-                    ? `Powieści autorstwa ${author?.username || 'tego autora'}`
-                    : `Nie znaleziono powieści autorstwa ${author?.username || 'tego autora'}`}
+                    ? t('authorPage.novelsBy', { author: author?.username || t('authorPage.novelsByFallback') })
+                    : t('authorPage.noNovelsBy', { author: author?.username || t('authorPage.novelsByFallback') })}
                 </h2>
                 
                 {novels.length > 0 ? (
@@ -134,10 +149,10 @@ const AuthorPage = () => {
                 ) : (
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Ten autor nie opublikował jeszcze żadnych powieści.
+                      {t('authorPage.noNovelsYet')}
                     </p>
                     <Button as="link" to="/browse">
-                      Przeglądaj inne powieści
+                      {t('authorPage.browseOtherNovels')}
                     </Button>
                   </div>
                 )}

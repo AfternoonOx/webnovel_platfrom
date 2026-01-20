@@ -18,11 +18,11 @@ const Button = ({
   
   // Variant classes
   const variantClasses = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 disabled:bg-indigo-300 dark:bg-indigo-500 dark:hover:bg-indigo-600',
-    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-700 dark:text-gray-100',
+    primary: 'border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 disabled:bg-indigo-300 dark:bg-indigo-500 dark:hover:bg-indigo-600',
+    secondary: 'border border-transparent bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-700 dark:text-gray-100',
     outline: 'border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-indigo-500 disabled:text-gray-300 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-300',
-    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-green-300',
+    danger: 'border border-transparent bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-300',
+    success: 'border border-transparent bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 disabled:bg-green-300',
     link: 'bg-transparent text-indigo-600 hover:text-indigo-800 hover:underline p-0 focus:ring-0 disabled:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300',
   };
   

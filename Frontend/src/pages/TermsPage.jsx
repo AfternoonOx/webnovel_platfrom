@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaFileContract } from 'react-icons/fa';
 import Layout from '../components/layout/Layout';
 import MobileNavigation from '../components/layout/MobileNavigation';
+import { useLanguage } from '../context/LanguageContext';
 
 const TermsPage = () => {
+  const { t } = useLanguage();
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8 pb-24 md:pb-8">
@@ -17,13 +20,13 @@ const TermsPage = () => {
           </Link>
           <div className="flex items-center">
             <FaFileContract className="text-indigo-500 mr-3" size={24} />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Warunki korzystania</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('termsPage.title')}</h1>
           </div>
         </div>
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <div className="text-gray-700 dark:text-gray-300 space-y-6">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Ostatnia aktualizacja: 19 maja 2025</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.lastUpdated')} 19 maja 2025</p>
             
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">1. Akceptacja warunków</h2>

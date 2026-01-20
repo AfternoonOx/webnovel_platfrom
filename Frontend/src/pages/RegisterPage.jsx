@@ -210,7 +210,7 @@ const RegisterPage = () => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-10 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white`}
-                  placeholder="••••••••"
+                  placeholder={t('common.passwordPlaceholder')}
                   required
                 />
                 <button
@@ -250,7 +250,7 @@ const RegisterPage = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-3 py-2 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white`}
-                  placeholder="••••••••"
+                  placeholder={t('common.passwordPlaceholder')}
                   required
                 />
               </div>

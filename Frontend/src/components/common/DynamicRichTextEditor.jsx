@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 
 const DynamicRichTextEditor = ({ 
   value, 
   onChange, 
-  placeholder = 'Write something...', 
+  placeholder,
   readOnly = false,
   height = '300px'
 }) => {
+  const { t } = useLanguage();
   const [isLoaded, setIsLoaded] = useState(false);
   const [quillInstance, setQuillInstance] = useState(null);
   const editorRef = useRef(null);
@@ -39,7 +41,7 @@ const DynamicRichTextEditor = ({
           const Quill = (await import('quill')).default;
           
           const quill = new Quill(editorRef.current, {
-            placeholder,
+            placeholder: placeholder || t('richTextEditor.defaultPlaceholder'),
             readOnly,
             theme: 'snow',
             modules: {
@@ -66,7 +68,7 @@ const DynamicRichTextEditor = ({
 
       initializeQuill();
     }
-  }, [isLoaded, placeholder, readOnly]);
+  }, [isLoaded, placeholder, readOnly, t]);
 
   // Set initial content
   useEffect(() => {
@@ -115,7 +117,7 @@ const DynamicRichTextEditor = ({
         style={{ height }}
         className="border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 flex items-center justify-center"
       >
-        <span className="text-gray-500 dark:text-gray-400">Loading editor...</span>
+        <span className="text-gray-500 dark:text-gray-400">{t('richTextEditor.loading')}</span>
       </div>
     );
   }

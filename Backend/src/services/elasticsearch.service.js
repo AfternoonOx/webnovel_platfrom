@@ -1,13 +1,16 @@
 const {
-	elasticClient,
+	getElasticClient,
+	isElasticsearchEnabled,
 	NOVEL_INDEX
 } = require('../config/elasticsearch');
 const logger = require('../utils/logger');
 
 class ElasticsearchService {
 	async indexNovel(novel) {
+		if (!isElasticsearchEnabled()) return;
+
 		try {
-			await elasticClient.index({
+			await getElasticClient().index({
 				index: NOVEL_INDEX,
 				id: novel._id.toString(),
 				document: this.transformNovelToDocument(novel)
@@ -20,26 +23,25 @@ class ElasticsearchService {
 	}
 
 	async bulkIndex(novels) {
+		if (!isElasticsearchEnabled()) return;
+
 		try {
-			// Flatten array for bulk operation format required by Elasticsearch
-			// Each item needs an action object followed by a document object
 			const operations = novels.flatMap(novel => [{
-					index: {
-						_index: NOVEL_INDEX,
-						_id: novel._id.toString()
-					}
-				},
-				this.transformNovelToDocument(novel)
+				index: {
+					_index: NOVEL_INDEX,
+					_id: novel._id.toString()
+				}
+			},
+			this.transformNovelToDocument(novel)
 			]);
 
 			const {
 				errors,
 				items
-			} = await elasticClient.bulk({
+			} = await getElasticClient().bulk({
 				operations
 			});
 
-			// Check for partial failures in bulk operation
 			if (errors) {
 				const failedItems = items.filter(item => item.index.error);
 				logger.error(`Bulk indexing had errors:`, failedItems);
@@ -54,8 +56,10 @@ class ElasticsearchService {
 	}
 
 	async updateNovel(novelId, updateData) {
+		if (!isElasticsearchEnabled()) return;
+
 		try {
-			await elasticClient.update({
+			await getElasticClient().update({
 				index: NOVEL_INDEX,
 				id: novelId.toString(),
 				doc: this.transformNovelToDocument(updateData)
@@ -68,26 +72,27 @@ class ElasticsearchService {
 	}
 
 	async bulkUpdate(updates) {
+		if (!isElasticsearchEnabled()) return;
+
 		try {
-			// Similar to bulkIndex but with update operation
 			const operations = updates.flatMap(({
 				id,
 				data
 			}) => [{
-					update: {
-						_index: NOVEL_INDEX,
-						_id: id.toString()
-					}
-				},
-				{
-					doc: this.transformNovelToDocument(data)
+				update: {
+					_index: NOVEL_INDEX,
+					_id: id.toString()
 				}
-			]);
+			},
+			{
+				doc: this.transformNovelToDocument(data)
+			}
+				]);
 
 			const {
 				errors,
 				items
-			} = await elasticClient.bulk({
+			} = await getElasticClient().bulk({
 				operations
 			});
 
@@ -105,8 +110,10 @@ class ElasticsearchService {
 	}
 
 	async deleteNovel(novelId) {
+		if (!isElasticsearchEnabled()) return;
+
 		try {
-			await elasticClient.delete({
+			await getElasticClient().delete({
 				index: NOVEL_INDEX,
 				id: novelId.toString()
 			});
@@ -118,6 +125,8 @@ class ElasticsearchService {
 	}
 
 	async bulkDelete(novelIds) {
+		if (!isElasticsearchEnabled()) return;
+
 		try {
 			const operations = novelIds.map(id => ({
 				delete: {
@@ -129,7 +138,7 @@ class ElasticsearchService {
 			const {
 				errors,
 				items
-			} = await elasticClient.bulk({
+			} = await getElasticClient().bulk({
 				operations
 			});
 
@@ -147,58 +156,55 @@ class ElasticsearchService {
 	}
 
 	async searchNovels(searchParams) {
-		
+		if (!isElasticsearchEnabled()) return null;
+
 		const {
-			search,         
-			genres,          
-			tags,           
-			status,         
-			minRating,      
-			sortBy,        
-			page = 1,       
-			limit = 10,    
-			author          
+			search,
+			genres,
+			tags,
+			status,
+			minRating,
+			sortBy,
+			page = 1,
+			limit = 10,
+			author
 		} = searchParams;
 
 		try {
 			const searchBody = {
 				query: {
-					bool: { 
-						must: [],     
-						should: [],   
+					bool: {
+						must: [],
+						should: [],
 						filter: [],
 						minimum_should_match: 0
 					}
 				}
 			};
 
-			// Only require a should match if search or author is provided
-			// This allows for pure filtering when no search term is given
 			if (search || author) {
 				searchBody.query.bool.minimum_should_match = 1;
 			}
 
 			if (search) {
 				searchBody.query.bool.should.push({
-					multi_match: { 
+					multi_match: {
 						query: search,
-						fields: ['title^3', 'description'], // Boost title matches for relevance
-						type: 'best_fields',    
-						fuzziness: 'AUTO',     // Enable fuzzy matching for typo tolerance
-						boost: 2.0       // Give search matches higher priority than author matches
+						fields: ['title^3', 'description'],
+						type: 'best_fields',
+						fuzziness: 'AUTO',
+						boost: 2.0
 					}
 				});
 			}
 
 			if (author) {
-				// Provide multiple matching strategies for author with different boost values
-				// to balance precision and recall in author search
 				searchBody.query.bool.should.push(
 					{
-						term: { 
+						term: {
 							'author.username': {
 								value: author,
-								boost: 5.0  // Exact match gets highest priority
+								boost: 5.0
 							}
 						}
 					},
@@ -206,7 +212,7 @@ class ElasticsearchService {
 						match_phrase_prefix: {
 							'author.username': {
 								query: author,
-								boost: 3.0  // Prefix match gets medium priority
+								boost: 3.0
 							}
 						}
 					},
@@ -214,8 +220,8 @@ class ElasticsearchService {
 						match: {
 							'author.username': {
 								query: author,
-								fuzziness: 'AUTO', // Fuzzy match for typo tolerance
-								boost: 1.0  // Fuzzy match gets lowest priority
+								fuzziness: 'AUTO',
+								boost: 1.0
 							}
 						}
 					}
@@ -223,7 +229,6 @@ class ElasticsearchService {
 			}
 
 			if (genres?.length) {
-				// Use nested bool to require ALL genres to match (AND logic)
 				const genreFilters = genres.map(genre => ({
 					term: { genres: genre }
 				}));
@@ -235,7 +240,6 @@ class ElasticsearchService {
 			}
 
 			if (tags?.length) {
-				// Use nested bool to require ALL tags to match (AND logic)
 				const tagFilters = tags.map(tag => ({
 					term: { tags: tag }
 				}));
@@ -254,17 +258,16 @@ class ElasticsearchService {
 
 			if (minRating) {
 				searchBody.query.bool.filter.push({
-					range: {  
+					range: {
 						'calculatedStats.averageRating': { gte: Number(minRating) }
 					}
 				});
 			}
 
 			searchBody.sort = this.buildSortOptions(sortBy);
-			searchBody.from = (page - 1) * limit; // Convert page to zero-based offset
+			searchBody.from = (page - 1) * limit;
 			searchBody.size = limit;
 
-			// Only add highlighting when there's something to highlight
 			if (search || author) {
 				searchBody.highlight = {
 					fields: {
@@ -275,15 +278,12 @@ class ElasticsearchService {
 				};
 			}
 
-			const searchStartTime = Date.now();
-			const result = await elasticClient.search({
+			const result = await getElasticClient().search({
 				index: NOVEL_INDEX,
 				body: searchBody
 			});
-			
-			const searchEndTime = Date.now();
 
-			const response = {
+			return {
 				total: result.hits.total.value,
 				hits: result.hits.hits.map(hit => ({
 					...hit._source,
@@ -292,8 +292,6 @@ class ElasticsearchService {
 					highlights: hit.highlight
 				}))
 			};
-
-			return response;
 		} catch (error) {
 			logger.error('Search failed:', error);
 			throw error;
@@ -311,7 +309,7 @@ class ElasticsearchService {
 			case 'chapters':
 				return [{ totalChapters: 'desc' }];
 			default:
-				return [{ _score: 'desc' }]; // Default to relevance sorting
+				return [{ _score: 'desc' }];
 		}
 	}
 
@@ -321,7 +319,7 @@ class ElasticsearchService {
 			description: novel.description,
 
 			author: novel.author && {
-				id: novel.author._id?.toString(),  
+				id: novel.author._id?.toString(),
 				username: novel.author.username
 			},
 
@@ -344,13 +342,10 @@ class ElasticsearchService {
 			updatedAt: novel.updatedAt
 		};
 
-		// Remove binary data before indexing to reduce document size
-		// and avoid base64 encoding overhead
 		if (esDocument.cover && esDocument.cover.data) {
 			delete esDocument.cover;
 		}
 
-		// Clean up any undefined fields to prevent Elasticsearch errors
 		Object.keys(esDocument).forEach(key => {
 			if (esDocument[key] === undefined) {
 				delete esDocument[key];
@@ -361,15 +356,17 @@ class ElasticsearchService {
 	}
 
 	async getAllNovelIds() {
+		if (!isElasticsearchEnabled()) return [];
+
 		try {
-			const result = await elasticClient.search({
+			const result = await getElasticClient().search({
 				index: NOVEL_INDEX,
 				body: {
 					query: {
 						match_all: {}
 					},
-					_source: false, // Only return IDs, not document content
-					size: 10000     // Assumes collection size is manageable; for larger collections would need pagination
+					_source: false,
+					size: 10000
 				}
 			});
 
@@ -379,10 +376,12 @@ class ElasticsearchService {
 			throw error;
 		}
 	}
-	
+
 	async getRecentNovels(limit = 5) {
+		if (!isElasticsearchEnabled()) return [];
+
 		try {
-			const result = await elasticClient.search({
+			const result = await getElasticClient().search({
 				index: NOVEL_INDEX,
 				body: {
 					query: { match_all: {} },

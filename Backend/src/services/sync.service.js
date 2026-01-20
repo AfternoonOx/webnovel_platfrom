@@ -1,18 +1,24 @@
 const mongoose = require('mongoose');
 const Novel = require('../models/novel.model');
 const elasticsearchService = require('./elasticsearch.service');
+const { isElasticsearchEnabled, getElasticClient, NOVEL_INDEX } = require('../config/elasticsearch');
 const logger = require('../utils/logger');
 
 class SyncService {
 	constructor() {
-		this.pollInterval = 30000; // 30 seconds between checks to balance responsiveness and system load
+		this.pollInterval = 30000;
 		this.pollTimer = null;
 		this.lastSyncTime = new Date();
-		this.maxRetries = 3; // Limit retries to prevent infinite loops while still handling transient failures
-		this.batchSize = 100; // Process in batches to avoid memory issues with large datasets
+		this.maxRetries = 3;
+		this.batchSize = 100;
 	}
 
 	async initializeSync() {
+		if (!isElasticsearchEnabled()) {
+			logger.info('Elasticsearch disabled, skipping sync initialization');
+			return;
+		}
+
 		try {
 			logger.info('Starting initial sync with Elasticsearch');
 			await this.processNovelsInBatches(
@@ -26,6 +32,34 @@ class SyncService {
 		}
 	}
 
+	async migrateToElasticsearch() {
+		if (!isElasticsearchEnabled()) {
+			throw new Error('Cannot migrate: Elasticsearch is not enabled. Set ELASTICSEARCH_ENABLED=true first.');
+		}
+
+		logger.info('Starting full migration to Elasticsearch');
+		const novels = await Novel.find().populate('author', 'username').lean();
+
+		let indexed = 0;
+		let failed = 0;
+
+		await this.processNovelsInBatches(novels, async (novel) => {
+			try {
+				await this.retryOperation(() => elasticsearchService.indexNovel(novel));
+				indexed++;
+				if (indexed % 100 === 0) {
+					logger.info(`Migration progress: ${indexed}/${novels.length} novels indexed`);
+				}
+			} catch (error) {
+				failed++;
+				logger.error(`Failed to index novel ${novel._id}:`, error.message);
+			}
+		});
+
+		logger.info(`Migration complete: ${indexed} indexed, ${failed} failed out of ${novels.length} total`);
+		return { total: novels.length, indexed, failed };
+	}
+
 	setupPolling() {
 		if (this.pollTimer) clearInterval(this.pollTimer);
 
@@ -33,11 +67,9 @@ class SyncService {
 			const currentTime = new Date();
 			try {
 				await this.pollForChanges(currentTime);
-				// Store current time only after successful sync to ensure no updates are missed
 				this.lastSyncTime = currentTime;
 			} catch (error) {
 				logger.error('Error during polling sync:', error);
-				// No lastSyncTime update on failure to ensure retrying the same time window
 			}
 		}, this.pollInterval);
 
@@ -45,11 +77,13 @@ class SyncService {
 	}
 
 	async pollForChanges(currentTime) {
+		if (!isElasticsearchEnabled()) return;
+
 		const modifiedNovels = await Novel.find({
-				updatedAt: {
-					$gt: this.lastSyncTime
-				}
-			})
+			updatedAt: {
+				$gt: this.lastSyncTime
+			}
+		})
 			.populate('author', 'username')
 			.lean();
 
@@ -65,7 +99,8 @@ class SyncService {
 	}
 
 	async handleDeletedNovels() {
-		// Two separate queries instead of in-memory filtering to handle large datasets efficiently
+		if (!isElasticsearchEnabled()) return;
+
 		const [esNovels, mongoNovels] = await Promise.all([
 			elasticsearchService.getAllNovelIds(),
 			Novel.find({}, '_id').lean()
@@ -84,6 +119,8 @@ class SyncService {
 	}
 
 	async verifySync() {
+		if (!isElasticsearchEnabled()) return;
+
 		try {
 			logger.info('Starting sync verification');
 			const novels = await Novel.find()
@@ -93,8 +130,8 @@ class SyncService {
 			let repaired = 0;
 			await this.processNovelsInBatches(novels, async (novel) => {
 				try {
-					const esDoc = await elasticsearchService.elasticClient.get({
-						index: elasticsearchService.NOVEL_INDEX,
+					const esDoc = await getElasticClient().get({
+						index: NOVEL_INDEX,
 						id: novel._id.toString()
 					});
 
@@ -105,7 +142,6 @@ class SyncService {
 						repaired++;
 					}
 				} catch (error) {
-					// 404 means document exists in MongoDB but not in Elasticsearch
 					if (error.meta?.statusCode === 404) {
 						await this.retryOperation(
 							() => elasticsearchService.indexNovel(novel)
@@ -134,7 +170,6 @@ class SyncService {
 				return await operation();
 			} catch (error) {
 				if (attempt === retries) throw error;
-				// Exponential backoff with a maximum delay to handle transient network issues
 				const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
 				await new Promise(resolve => setTimeout(resolve, delay));
 			}
@@ -142,7 +177,6 @@ class SyncService {
 	}
 
 	compareDocuments(mongoDoc, esDoc) {
-		// Only compare fields that affect search relevance or display
 		const fields = [
 			'title', 'description', 'genres', 'tags', 'status',
 			'calculatedStats', 'viewCount', 'totalChapters'
@@ -151,7 +185,6 @@ class SyncService {
 		return fields.every(field => {
 			const mongoValue = mongoDoc[field];
 			const esValue = esDoc[field];
-			// Special handling for objects/arrays since direct comparison would fail
 			return typeof mongoValue === 'object' && mongoValue !== null ?
 				JSON.stringify(mongoValue) === JSON.stringify(esValue) :
 				mongoValue === esValue;

@@ -49,7 +49,7 @@ const novelRoutes = require('./novel.controller');
 router.use('/novels', novelRoutes);
 
 const libraryRoutes = require('./library.controller');
-router.use('/library', libraryRoutes); 
+router.use('/library', libraryRoutes);
 
 const recommendationRoutes = require('./recommendation.controller');
 router.use('/recommendations', recommendationRoutes);
@@ -57,5 +57,11 @@ router.use('/recommendations', recommendationRoutes);
 // Import comment routes
 const commentRoutes = require('./comment.controller');
 router.use('/comments', commentRoutes);
+
+const adminRoutes = require('./admin');
+router.use('/admin', adminRoutes);
+
+const notificationRoutes = require('./notification.controller');
+router.use('/notifications', notificationRoutes);
 
 module.exports = router;

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  FaArrowRight, FaBookOpen, FaStar, FaFire, FaClock, FaSearch,
-  FaBookmark, FaEye, FaMagic, FaFeather, FaSpaceShuttle,
-  FaPen, FaUserAstronaut, FaGlobe, FaQuoteRight
+  FaArrowRight, FaBookOpen, FaStar, FaClock, FaSearch,
+  FaEye, FaMagic, FaFeather, FaSpaceShuttle,
+  FaGlobe, FaQuoteRight
 } from 'react-icons/fa';
 import NovelService from '../services/novel.service';
 import Layout from '../components/layout/Layout';
@@ -306,15 +306,6 @@ const HomePage = () => {
   const [popularNovels, setPopularNovels] = useState([]);
   const [genresHighlight, setGenresHighlight] = useState([]);
   const [topWriters, setTopWriters] = useState([]);
-
-  // Genre icons mapping
-  const genreIcons = {
-    'Fantasy': FaMagic,
-    'Romance': FaFeather,
-    'Science Fiction': FaSpaceShuttle,
-    'Mystery': FaSearch,
-    'Adventure': FaGlobe
-  };
 
   // Ref for scroll animations
   const sectionsRef = useRef([]);

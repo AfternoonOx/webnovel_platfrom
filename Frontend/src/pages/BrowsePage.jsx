@@ -157,7 +157,7 @@ const BrowsePage = () => {
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
                 className="sm:hidden mr-2"
-                aria-label="Toggle filters"
+                aria-label={t('ui.toggleFiltersAria')}
               >
                 <FaFilter />
               </Button>
