@@ -9,166 +9,12 @@ import NovelService from '../services/novel.service';
 import Layout from '../components/layout/Layout';
 import MobileNavigation from '../components/layout/MobileNavigation';
 import Button from '../components/common/Button';
+import NovelCard from '../components/novel/NovelCard';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../context/LanguageContext';
 import { getImagePlaceholder, truncateText } from '../utils/helpers';
 
-// Custom Home Novel Card - specifically for homepage display
-const HomeNovelDisplay = ({ novel, featured = false }) => {
-  const { t } = useLanguage();
-  if (!novel) return null;
 
-  const { title, author, description, genres, calculatedStats, totalChapters, viewCount } = novel;
-
-  const authorName = author?.username || t('novel.unknown');
-  const authorId = author?.id || author?._id || '';
-  const novelId = novel.id || novel._id || '';
-
-  const placeholder = getImagePlaceholder(title);
-  const hasCover = !!novel.cover;
-  const coverUrl = hasCover ? NovelService.getNovelCoverUrl(novelId) : null;
-
-  if (featured) {
-    return (
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-purple-900 to-indigo-900 shadow-xl transform transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl">
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-indigo-600/20 blur-3xl"></div>
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-purple-600/20 blur-3xl"></div>
-        <div className="flex flex-col md:flex-row relative z-10">
-          {/* Cover Image - larger for featured novels */}
-          <div className="md:w-1/3 w-full h-52 md:h-auto relative">
-            {hasCover ? (
-              <img
-                src={coverUrl}
-                alt={title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.style.backgroundColor = placeholder.color;
-                  e.target.src = '';
-                  e.target.alt = placeholder.initials;
-                }}
-              />
-            ) : (
-              <div
-                className="w-full h-full flex items-center justify-center text-white text-4xl font-bold"
-                style={{ backgroundColor: placeholder.color }}
-              >
-                {placeholder.initials}
-              </div>
-            )}
-
-            {/* Featured Badge */}
-            <div className="absolute top-3 left-3">
-              <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-semibold rounded-full shadow-lg">
-                {t('homePage.featured')}
-              </span>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 md:w-2/3 flex flex-col justify-between text-white">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                {genres && genres.slice(0, 2).map((genre, index) => (
-                  <Link
-                    key={index}
-                    to={`/browse?genre=${genre}`}
-                    className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded-full transition"
-                  >
-                    {genre}
-                  </Link>
-                ))}
-              </div>
-
-              <Link to={`/novels/${novelId}`}>
-                <h2 className="text-xl md:text-2xl font-bold mb-2 hover:text-indigo-300 transition">
-                  {title}
-                </h2>
-              </Link>
-
-              <Link to={authorId ? `/authors/${authorId}` : '#'} className="text-indigo-200 hover:text-white text-sm mb-3 inline-block">
-                {t('novel.by')} {authorName}
-              </Link>
-
-              <p className="text-gray-200 mb-4 line-clamp-2 md:line-clamp-3">
-                {truncateText(description || t('novel.noDescription'), 200)}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center"><FaStar className="text-amber-400 mr-1" /> {(calculatedStats?.averageRating || 0).toFixed(1)}</span>
-                <span className="flex items-center"><FaBookOpen className="mr-1" /> {totalChapters || 0}</span>
-                <span className="flex items-center"><FaEye className="mr-1" /> {viewCount || 0}</span>
-              </div>
-
-              <Button
-                as="link"
-                to={`/novels/${novelId}`}
-                variant="outline"
-                size="sm"
-                className="border-white text-white hover:bg-white hover:text-indigo-900"
-              >
-                {t('homePage.readNow')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Standard home novel display (for non-featured novels)
-  return (
-    <div className="group bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:translate-y-[-5px] hover:shadow-xl relative">
-      <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/5 to-purple-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      <Link to={`/novels/${novelId}`} className="block relative">
-        <div className="relative aspect-w-2 aspect-h-3 w-full">
-          {hasCover ? (
-            <img
-              src={coverUrl}
-              alt={title}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.style.backgroundColor = placeholder.color;
-                e.target.src = '';
-                e.target.alt = placeholder.initials;
-              }}
-            />
-          ) : (
-            <div
-              className="w-full h-full flex items-center justify-center text-white text-2xl font-bold"
-              style={{ backgroundColor: placeholder.color }}
-            >
-              {placeholder.initials}
-            </div>
-          )}
-
-          {/* Overlay for better text visibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-            <h3 className="text-white font-semibold line-clamp-2">{title}</h3>
-            <p className="text-gray-200 text-sm">{t('novel.by')} {authorName}</p>
-          </div>
-        </div>
-      </Link>
-
-      <div className="p-3 flex justify-between items-center bg-white dark:bg-gray-800 relative z-10">
-        <div className="flex items-center text-xs text-gray-600 dark:text-gray-300 gap-3">
-          <span className="flex items-center"><FaStar className="text-amber-400 mr-1" /> {(calculatedStats?.averageRating || 0).toFixed(1)}</span>
-          <span className="flex items-center"><FaBookOpen className="mr-1" /> {totalChapters || 0}</span>
-        </div>
-
-        <Link
-          to={`/novels/${novelId}`}
-          className="text-indigo-600 dark:text-indigo-400 text-xs hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center"
-        >
-          {t('homePage.read')} <FaArrowRight className="inline ml-1 transition-transform group-hover:translate-x-1" />
-        </Link>
-      </div>
-    </div>
-  );
-};
 
 // Featured Genre Section Card
 const GenreCard = ({ genre, count, icon: Icon }) => {
@@ -418,7 +264,7 @@ const HomePage = () => {
           .filter(genre => genre.count > 0)
           .sort((a, b) => b.count - a.count)
           .slice(0, 5);
-        
+
         // If we don't have enough genres with novels, fill with placeholder data
         if (topGenres.length < 5) {
           const remainingGenres = Object.keys(genresWithIcons)
@@ -431,7 +277,7 @@ const HomePage = () => {
             }));
           topGenres.push(...remainingGenres);
         }
-        
+
         setGenresHighlight(topGenres);
 
         // Sample top writers (in a real app, you'd fetch this from API)
@@ -493,9 +339,9 @@ const HomePage = () => {
               src="/src/assets/home-1.webp"
               alt="Books background"
               className="w-full h-full object-cover"
-			  style={{
-				objectPosition: window.innerWidth < 768 ? '60% 20%' : 'center center'
-			  }}
+              style={{
+                objectPosition: window.innerWidth < 768 ? '60% 20%' : 'center center'
+              }}
             />
           </div>
 
@@ -575,37 +421,6 @@ const HomePage = () => {
             ) : (
               <>
 
-                {/* Popular Genres */}
-                <div
-                  ref={el => sectionsRef.current[1] = el}
-                  className="mb-16 opacity-0"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center">
-                      <FaMagic className="text-indigo-500 mr-2" />
-                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('homePage.exploreGenres')}</h2>
-                    </div>
-                    <Link
-                      to="/browse"
-                      className="text-indigo-600 dark:text-indigo-400 flex items-center hover:text-indigo-700 dark:hover:text-indigo-300"
-                    >
-                      {t('homePage.viewAllGenres')} <FaArrowRight className="ml-1" />
-                    </Link>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    {genresHighlight.map((genre, index) => (
-                      <GenreCard
-                        key={index}
-                        genre={genre.name}
-                        count={genre.count}
-                        icon={genre.icon}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-
 
                 {/* Popular Novels Section */}
                 <div
@@ -626,7 +441,7 @@ const HomePage = () => {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     {popularNovels.map(novel => (
-                      <HomeNovelDisplay key={novel.id || novel._id} novel={novel} />
+                      <NovelCard key={novel.id || novel._id} novel={novel} />
                     ))}
                   </div>
                 </div>
@@ -650,7 +465,7 @@ const HomePage = () => {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     {recentNovels.map(novel => (
-                      <HomeNovelDisplay key={novel.id || novel._id} novel={novel} />
+                      <NovelCard key={novel.id || novel._id} novel={novel} />
                     ))}
                   </div>
                 </div>
